@@ -85,9 +85,9 @@
             display-name = "Default";
             bindings = <
 &kp Q                &kp W      &kp E          &kp R             &kp T                                            &kp Y         &kp U             &kp I          &kp O       &kp P
-&mt LEFT_SHIFT A     &kp S      &kp D          &kp F             &kp G                                            &kp H         &kp J             &kp K          &kp L       &mt RIGHT_SHIFT LS(LBKT)
-&mt2 LEFT_CONTROL Z  &kp X      &kp C          &kp V             &kp B                                            &kp N         &kp M             &kp COMMA      &kp PERIOD  &mt LS(RIGHT_CONTROL) LS(INTERNATIONAL_1)
-&trans               &trans     &trans         &lt 2 LANGUAGE_2  &mt LEFT_ALT SPACE  &kp LEFT_GUI  &kp BACKSPACE  &kp ENTER     &lt 1 LANGUAGE_1  &trans         &trans      &trans
+&mt LEFT_SHIFT A     &kp S      &kp D          &kp F             &kp G                                            &kp H         &kp J             &kp K          &kp L       &mt RIGHT_SHIFT LBKT
+&mt2 LEFT_CONTROL Z  &kp X      &kp C          &kp V             &kp B                                            &kp N         &kp M             &kp COMMA      &kp PERIOD  &mt RIGHT_CONTROL LS(INTERNATIONAL_1)
+&trans               &trans     &trans         &lt 2 LANGUAGE_2  &mt LEFT_ALT SPACE  &kp LEFT_GUI  &kp BACKSPACE  &lt 3 RETURN  &lt 1 LANGUAGE_1  &trans         &trans      &trans
                      &none      &kp LA(RIGHT)  &kp LA(DOWN)      &kp LA(LEFT)        &kp LA(UP)    &kp LC(UP)     &kp LC(LEFT)  &kp LC(DOWN)      &kp LC(RIGHT)  &none
 &mkp LCLK            &mkp RCLK  &mkp MCLK                                                                                                         &mkp LCLK      &mkp RCLK   &mkp MCLK
 &mkp MB4             &mkp MB5   &kp LG(TAB)    &kp LG(D)         &kp LCTRL                                        &mkp MB4      &mkp MB5          &kp LG(TAB)    &kp LG(D)   &kp LCTRL
@@ -97,26 +97,26 @@
         SECONDARY_LAYER {
             display-name = "secondary_layer";
             bindings = <
-&kp ESCAPE        &kp F2             &kp F3   &kp F4   &kp F5                    &kp PLUS          &kp MINUS          &kp KP_NUMBER_7  &kp KP_NUMBER_8  &kp KP_NUMBER_9
-&kp F6            &kp F7             &kp F8   &kp F9   &kp F10                   &kp ASTERISK      &kp SLASH          &kp KP_NUMBER_4  &kp KP_NUMBER_5  &kp KP_NUMBER_6
-&kp F11           &kp F12            &kp F13  &kp F14  &kp F15                   &kp EXCLAMATION   &kp QUESTION       &kp KP_NUMBER_1  &kp KP_NUMBER_2  &kp KP_NUMBER_3
-&trans            &trans             &trans   &trans   &trans   &trans  &kp DEL  &trans            &trans             &kp KP_NUMBER_0  &trans           &trans
-                  &trans             &trans   &trans   &trans   &trans  &trans   &trans            &trans             &trans           &trans
-&trans            &trans             &trans                                                                           &trans           &trans           &trans
-&kp LC(LG(LEFT))  &kp LC(LG(RIGHT))  &trans   &trans   &trans                    &kp LC(LG(LEFT))  &kp LC(LG(RIGHT))  &trans           &trans           &trans
+&kp ESCAPE        &kp F2             &kp F3   &kp F4   &kp F5                    &kp COLON          &kp MINUS          &kp KP_NUMBER_7  &kp KP_NUMBER_8  &kp KP_NUMBER_9
+&kp F6            &kp F7             &kp F8   &kp F9   &kp F10                   &kp DOUBLE_QUOTES  &kp SLASH          &kp KP_NUMBER_4  &kp KP_NUMBER_5  &kp KP_NUMBER_6
+&kp F11           &kp F12            &kp F13  &kp F14  &kp F15                   &kp EXCLAMATION    &kp QUESTION       &kp KP_NUMBER_1  &kp KP_NUMBER_2  &kp KP_NUMBER_3
+&trans            &trans             &trans   &trans   &trans   &trans  &kp DEL  &trans             &trans             &kp KP_NUMBER_0  &trans           &trans
+                  &trans             &trans   &trans   &trans   &trans  &trans   &trans             &trans             &trans           &trans
+&trans            &trans             &trans                                                                            &trans           &trans           &trans
+&kp LC(LG(LEFT))  &kp LC(LG(RIGHT))  &trans   &trans   &trans                    &kp LC(LG(LEFT))   &kp LC(LG(RIGHT))  &trans           &trans           &trans
             >;
         };
 
         TERTIARY_LAYER {
             display-name = "tertiary_layer";
             bindings = <
-&bt BT_SEL 0  &bt BT_SEL 1  &bt BT_SEL 2    &bt BT_SEL 3  &bt BT_SEL 4                  &kp DOUBLE_QUOTES  &kp LEFT_PARENTHESIS  &kp RIGHT_PARENTHESIS  &kp AMPERSAND  &kp PIPE
-&trans        &trans        &trans          &trans        &trans                        &kp SINGLE_QUOTE   &kp LEFT_BRACKET      &kp RIGHT_BRACKET      &kp SEMI       &kp COLON
-&trans        &trans        &trans          &trans        &trans                        &kp GRAVE          &kp LEFT_BRACE        &kp RIGHT_BRACE        &kp TILDE      &kp CARET
-&bt BT_CLR    &trans        &bt BT_CLR_ALL  &trans        &trans        &trans  &trans  &trans             &trans                &trans                 &trans         &trans
-              &trans        &trans          &trans        &trans        &trans  &trans  &trans             &trans                &trans                 &trans
-&trans        &trans        &trans                                                                                               &trans                 &trans         &trans
-&trans        &trans        &trans          &trans        &trans                        &trans             &trans                &trans                 &trans         &trans
+&bt BT_SEL 0  &bt BT_SEL 1  &bt BT_SEL 2    &bt BT_SEL 3  &bt BT_SEL 4                  &kp AT         &kp ASTERISK       &kp LEFT_PARENTHESIS  &kp CARET  &kp LS(INT_YEN)
+&trans        &trans        &trans          &trans        &trans                        &kp AMPERSAND  &kp RIGHT_BRACKET  &kp BACKSLASH         &kp SEMI   &kp SQT
+&trans        &trans        &trans          &trans        &trans                        &kp GRAVE      &kp RIGHT_BRACE    &kp PIPE              &kp EQUAL  &kp TILDE
+&bt BT_CLR    &trans        &bt BT_CLR_ALL  &trans        &trans        &trans  &trans  &trans         &trans             &trans                &trans     &trans
+              &trans        &trans          &trans        &trans        &trans  &trans  &trans         &trans             &trans                &trans
+&trans        &trans        &trans                                                                                        &trans                &trans     &trans
+&trans        &trans        &trans          &trans        &trans                        &trans         &trans             &trans                &trans     &trans
             >;
         };
 
