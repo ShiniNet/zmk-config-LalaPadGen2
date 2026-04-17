@@ -155,14 +155,15 @@
         };
 
         WINDOWS_LAYER {
+            display-name = "windows_layer";
             bindings = <
-&trans  &trans  &trans  &trans  &trans                  &trans  &trans  &trans  &trans  &trans
-&trans  &trans  &trans  &trans  &trans                  &trans  &trans  &trans  &trans  &trans
-&trans  &trans  &trans  &trans  &trans                  &trans  &trans  &trans  &trans  &trans
-&trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans
-        &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans
-&trans  &trans  &trans                                                  &trans  &trans  &trans
-&trans  &trans  &trans  &trans  &trans                  &trans  &trans  &trans  &trans  &trans
+&kp Q                &kp W        &kp E          &kp R         &kp T                                                    &kp Y             &kp U            &kp I          &kp O       &kp P
+&kp A                &kp S        &kp D          &kp F         &kp G                                                    &kp H             &lt 3 J          &kp K          &lt 3 L     &mt RIGHT_SHIFT LBKT
+&mt3 LEFT_CONTROL Z  &kp X        &kp C          &kp V         &kp B                                                    &kp N             &kp M            &kp COMMA      &kp PERIOD  &mt3 RIGHT_CONTROL LS(INTERNATIONAL_1)
+&trans               &trans       &trans         &lt 3 DELETE  &mt LEFT_ALT LANGUAGE_2  &mt LEFT_GUI SPACE  &kp RETURN  &lt 4 LANGUAGE_1  &lt 2 BACKSPACE  &trans         &trans      &trans
+                     &kp LA(TAB)  &kp LA(RIGHT)  &kp LA(DOWN)  &kp LA(LEFT)             &kp LA(UP)          &kp LC(UP)  &kp LC(LEFT)      &kp LC(DOWN)     &kp LC(RIGHT)  &none
+&mkp LCLK            &mkp RCLK    &mkp MCLK                                                                                                                &mkp LCLK      &mkp RCLK   &mkp MCLK
+&mkp MB4             &mkp MB5     &kp LG(TAB)    &kp LG(D)     &trans                                                   &mkp MB4          &mkp MB5         &kp LG(TAB)    &kp LG(D)   &trans
             >;
         };
 
