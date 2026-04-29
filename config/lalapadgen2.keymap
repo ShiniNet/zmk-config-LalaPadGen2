@@ -141,7 +141,7 @@
         mm_yen: mm_yen {
             compatible = "zmk,behavior-mod-morph";
             label = "MM_YEN";
-            bindings = <&kp 0x89>, <&kp PIPE>;
+            bindings = <&kp INTERNATIONAL_3>, <&kp PIPE>;
 
             #binding-cells = <0>;
             mods = <(MOD_LSFT|MOD_RSFT)>;
