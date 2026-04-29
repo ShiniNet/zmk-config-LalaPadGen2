@@ -165,7 +165,7 @@
 &kp LEFT_SHIFT  &kp LWIN       &kp LEFT_CONTROL   &kp RIGHT_ALT       &kp SPACE         &mo 1       &mo 2   &kp ENTER       &kp BACKSPACE  &kp LANGUAGE_2    &kp LANGUAGE_1      &mm_bslh
                 &kp LA(LC(C))  &kp LA(LC(RIGHT))  &kp LC(DOWN)        &kp LC(LA(LEFT))  &kp LC(UP)  &kp UP  &kp LEFT_ARROW  &kp DOWN       &kp RIGHT         &trans
 &mkp LCLK       &mkp RCLK      &mkp MCLK                                                                                                   &mkp LCLK         &mkp RCLK           &mkp MCLK
-&mkp MB4        &mkp MB5       &kp LC(UP_ARROW)   &kp LC(DOWN_ARROW)  &kp LEFT_COMMAND                      &mkp MB4        &mkp MB5       &kp LC(UP_ARROW)  &kp LC(DOWN_ARROW)  &kp LEFT_COMMAND
+&mkp MB4        &mkp MB5       &kp LC(UP_ARROW)   &kp LC(DOWN_ARROW)  &kp LEFT_CONTROL                      &mkp MB4        &mkp MB5       &kp LC(UP_ARROW)  &kp LC(DOWN_ARROW)  &kp LEFT_CONTROL
             >;
         };
 
