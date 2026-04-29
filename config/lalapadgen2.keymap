@@ -137,6 +137,15 @@
             #binding-cells = <0>;
             mods = <(MOD_LSFT|MOD_RSFT)>;
         };
+
+        mm_yen: mm_yen {
+            compatible = "zmk,behavior-mod-morph";
+            label = "MM_YEN";
+            bindings = <&kp INT_YEN>, <&kp PIPE>;
+
+            #binding-cells = <0>;
+            mods = <(MOD_LSFT|MOD_RSFT)>;
+        };
     };
 
     combos {
@@ -186,7 +195,7 @@
             display-name = "tertiary_layer";
             bindings = <
 &kp EXCLAMATION  &kp DQT        &kp HASH  &kp DOLLAR  &kp PERCENT                  &kp PAGE_UP    &kp HOME        &trans          &kp END          &kp PRINTSCREEN
-&kp AMPS         &kp SQT        &kp LPAR  &kp RPAR    &kp INT_YEN                  &kp PAGE_DOWN  &mkp MB4        &kp UP_ARROW    &mkp MB5         &kp SCROLLLOCK
+&kp AMPS         &kp SQT        &kp LPAR  &kp RPAR    &mm_yen                      &kp PAGE_DOWN  &mkp MB4        &kp UP_ARROW    &mkp MB5         &kp SCROLLLOCK
 &trans           &trans         &kp LBKT  &kp RBKT    &trans                       &trans         &kp LEFT_ARROW  &kp DOWN_ARROW  &kp RIGHT_ARROW  &kp PAUSE_BREAK
 &trans           &trans         &trans    &trans      &trans       &trans  &trans  &trans         &trans          &trans          &trans           &trans
                  &kp LC(LA(F))  &trans    &trans      &trans       &trans  &trans  &trans         &trans          &trans          &trans
