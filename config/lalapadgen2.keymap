@@ -28,6 +28,7 @@
             label = "td_mo12";
             #binding-cells = <0>;
             bindings = <&mo 1>, <&mo 2>;
+        };
     };
 
     combos {
