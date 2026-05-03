@@ -111,6 +111,14 @@
             tapping-term-ms = <300>;
         };
 
+        tp_mkp_mb4_mb5: tp_mkp_mb4_mb5 {
+            compatible = "zmk,behavior-tap-dance";
+            label = "TP_MKP_MB4_MB5";
+            #binding-cells = <0>;
+            bindings = <&mkp MB4>, <&mkp MB5>;
+            tapping-term-ms = <300>;
+        };
+
         mt_tap: mt_tap {
             compatible = "zmk,behavior-hold-tap";
             label = "MT_TAP";
