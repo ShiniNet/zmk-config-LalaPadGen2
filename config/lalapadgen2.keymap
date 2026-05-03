@@ -148,8 +148,8 @@
         };
 
         COMBO_TAB_ALT {
-            bindings = <&lm 3 LEFT_ALT>;
-            key-positions = <33 22>;
+            bindings = <&lm 2 LEFT_ALT>;
+            key-positions = <33 4>;
             slow-release;
             timeout-ms = <300>;
         };
@@ -192,7 +192,7 @@
             bindings = <
 &mt_tap PRINTSCREEN ESCAPE  &mt LWIN PERIOD  &tp_msc_up_left     &tp_mkp_mb4_mb5  &kp TAB                   &mt_tap END HOME  &kp UP_ARROW   &kp TAB    &kp RWIN             &kp ESCAPE
 &mt LCTRL MINUS             &mt LALT ENTER   &tp_msc_down_right  &mkp MB1         &mkp MB3                  &kp LEFT_ARROW    &kp DOWN       &kp RIGHT  &mt ENTER RIGHT_ALT  &kp RIGHT_CONTROL
-&mt LSHIFT INSERT           &kp BACKSPACE    &kp TAB             &mkp MB2         &kp DEL                   &kp PAGE_UP       &kp PAGE_DOWN  &kp SPACE  &kp BACKSPACE        &kp RSHIFT
+&mt LSHIFT INSERT           &kp BACKSPACE    &kp SPACE           &mkp MB2         &kp DEL                   &kp PAGE_UP       &kp PAGE_DOWN  &kp SPACE  &kp BACKSPACE        &kp RSHIFT
 &trans                      &trans           &trans              &trans           &trans    &trans  &trans  &trans            &trans         &trans     &trans               &trans
                             &trans           &trans              &trans           &trans    &trans  &trans  &trans            &trans         &trans     &trans
 &trans                      &trans           &trans                                                                                          &trans     &trans               &trans
@@ -203,13 +203,13 @@
         SYSTEM_LAYER {
             display-name = "system_layer";
             bindings = <
-&kp K_MUTE                    &mt C_BRIGHTNESS_DEC C_BRIGHTNESS_INC  &kp SPACE       &kp UP_ARROW    &mt END HOME                     &out OUT_TOG                   &bt BT_SEL 0                   &bt BT_SEL 1                   &bt BT_SEL 2                   &bt BT_SEL 3
-&mt LEFT_CONTROL C_VOLUME_UP  &mt LEFT_ALT ENTER                     &kp LEFT_ARROW  &kp DOWN_ARROW  &kp RIGHT_ARROW                  &sys_reset                     &mkp MB1                       &bt BT_CLR                     &bt BT_CLR_ALL                 &bootloader
-&mt LEFT_SHIFT C_VOLUME_DOWN  &kp BACKSPACE                          &kp TAB         &kp PAGE_DOWN   &kp PAGE_UP                      &zip_dyn_scale ZDS_XY ZDS_INC  &zip_dyn_scale ZDS_XY ZDS_DEC  &zip_dyn_scale ZDS_SC ZDS_INC  &zip_dyn_scale ZDS_SC ZDS_DEC  &zip_dyn_scale ZDS_ALL ZDS_RST
-&trans                        &trans                                 &trans          &trans          &trans           &trans  &trans  &trans                         &trans                         &trans                         &trans                         &trans
-                              &trans                                 &trans          &trans          &trans           &trans  &trans  &trans                         &trans                         &trans                         &trans
-&trans                        &trans                                 &trans                                                                                                                         &trans                         &trans                         &trans
-&trans                        &trans                                 &trans          &trans          &trans                           &trans                         &trans                         &trans                         &trans                         &trans
+&kp K_MUTE                    &mt_tap C_BRIGHTNESS_DEC C_BRIGHTNESS_INC  &kp K_CONTEXT_MENU  &kp UP_ARROW    &mt END HOME                     &out OUT_TOG                   &bt BT_SEL 0                   &bt BT_SEL 1                   &bt BT_SEL 2                   &bt BT_SEL 3
+&mt LEFT_CONTROL C_VOLUME_UP  &mt LEFT_ALT ENTER                         &kp LEFT_ARROW      &kp DOWN_ARROW  &kp RIGHT_ARROW                  &sys_reset                     &mkp MB1                       &bt BT_CLR                     &bt BT_CLR_ALL                 &bootloader
+&mt LEFT_SHIFT C_VOLUME_DOWN  &kp BACKSPACE                              &kp SPACE           &kp PAGE_DOWN   &kp PAGE_UP                      &zip_dyn_scale ZDS_XY ZDS_INC  &zip_dyn_scale ZDS_XY ZDS_DEC  &zip_dyn_scale ZDS_SC ZDS_INC  &zip_dyn_scale ZDS_SC ZDS_DEC  &zip_dyn_scale ZDS_ALL ZDS_RST
+&trans                        &trans                                     &trans              &trans          &trans           &trans  &trans  &trans                         &trans                         &trans                         &trans                         &trans
+                              &trans                                     &trans              &trans          &trans           &trans  &trans  &trans                         &trans                         &trans                         &trans
+&trans                        &trans                                     &trans                                                                                                                             &trans                         &trans                         &trans
+&trans                        &trans                                     &trans              &trans          &trans                           &trans                         &trans                         &trans                         &trans                         &trans
             >;
         };
     };
