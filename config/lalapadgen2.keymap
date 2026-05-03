@@ -203,9 +203,9 @@
         SYSTEM_LAYER {
             display-name = "system_layer";
             bindings = <
-&kp K_MUTE                    &mt_tap C_BRIGHTNESS_DEC C_BRIGHTNESS_INC  &kp K_CONTEXT_MENU  &kp UP_ARROW    &mt END HOME                     &out OUT_TOG                   &bt BT_SEL 0                   &bt BT_SEL 1                   &bt BT_SEL 2                   &bt BT_SEL 3
+&kp C_MUTE                    &mt_tap C_BRIGHTNESS_DEC C_BRIGHTNESS_INC  &kp K_CONTEXT_MENU  &kp UP_ARROW    &mt END HOME                     &out OUT_TOG                   &bt BT_SEL 0                   &bt BT_SEL 1                   &bt BT_SEL 2                   &bt BT_SEL 3
 &mt LEFT_CONTROL C_VOLUME_UP  &mt LEFT_ALT ENTER                         &kp LEFT_ARROW      &kp DOWN_ARROW  &kp RIGHT_ARROW                  &sys_reset                     &mkp MB1                       &bt BT_CLR                     &bt BT_CLR_ALL                 &bootloader
-&mt LEFT_SHIFT C_VOLUME_DOWN  &kp BACKSPACE                              &kp SPACE           &kp PAGE_DOWN   &kp PAGE_UP                      &zip_dyn_scale ZDS_XY ZDS_INC  &zip_dyn_scale ZDS_XY ZDS_DEC  &zip_dyn_scale ZDS_SC ZDS_INC  &zip_dyn_scale ZDS_SC ZDS_DEC  &zip_dyn_scale ZDS_ALL ZDS_RST
+&mt LEFT_SHIFT C_VOLUME_DOWN  &kp BACKSPACE                              &kp PAGE_UP         &kp PAGE_DOWN   &kp DEL                          &zip_dyn_scale ZDS_XY ZDS_INC  &zip_dyn_scale ZDS_XY ZDS_DEC  &zip_dyn_scale ZDS_SC ZDS_INC  &zip_dyn_scale ZDS_SC ZDS_DEC  &zip_dyn_scale ZDS_ALL ZDS_RST
 &trans                        &trans                                     &trans              &trans          &trans           &trans  &trans  &trans                         &trans                         &trans                         &trans                         &trans
                               &trans                                     &trans              &trans          &trans           &trans  &trans  &trans                         &trans                         &trans                         &trans
 &trans                        &trans                                     &trans                                                                                                                             &trans                         &trans                         &trans
