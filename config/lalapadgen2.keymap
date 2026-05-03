@@ -149,7 +149,7 @@
 
         COMBO_TAB_ALT {
             bindings = <&lm 3 LEFT_ALT>;
-            key-positions = <2 32>;
+            key-positions = <2 33>;
             slow-release;
             timeout-ms = <300>;
         };
@@ -203,7 +203,7 @@
         SYSTEM_LAYER {
             display-name = "system_layer";
             bindings = <
-&kp F1   &kp F2   &kp F3          &kp UP_ARROW    &mt END HOME                     &out OUT_TOG                   &bt BT_SEL 0                   &bt BT_SEL 1                   &bt BT_SEL 2                   &bt BT_SEL 3
+&kp F1   &kp F2   &kp TAB         &kp UP_ARROW    &mt END HOME                     &out OUT_TOG                   &bt BT_SEL 0                   &bt BT_SEL 1                   &bt BT_SEL 2                   &bt BT_SEL 3
 &kp F6   &kp F7   &kp LEFT_ARROW  &kp DOWN_ARROW  &kp RIGHT_ARROW                  &sys_reset                     &bootloader                    &bt BT_CLR                     &bt BT_CLR_ALL                 &trans
 &kp F11  &kp F12  &kp F13         &kp F14         &kp F15                          &zip_dyn_scale ZDS_XY ZDS_INC  &zip_dyn_scale ZDS_XY ZDS_DEC  &zip_dyn_scale ZDS_SC ZDS_INC  &zip_dyn_scale ZDS_SC ZDS_DEC  &zip_dyn_scale ZDS_ALL ZDS_RST
 &trans   &trans   &trans          &trans          &trans           &trans  &trans  &trans                         &trans                         &trans                         &trans                         &trans
