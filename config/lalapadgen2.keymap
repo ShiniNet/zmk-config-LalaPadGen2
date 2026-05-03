@@ -192,7 +192,7 @@
             bindings = <
 &mt_tap PRINTSCREEN ESCAPE  &mt LWIN PERIOD  &tp_msc_up_left     &tp_mkp_mb4_mb5  &kp TAB                   &mt_tap END HOME  &kp UP_ARROW   &kp TAB    &kp RWIN             &kp ESCAPE
 &mt LCTRL MINUS             &mt LALT ENTER   &tp_msc_down_right  &mkp MB1         &mkp MB3                  &kp LEFT_ARROW    &kp DOWN       &kp RIGHT  &mt ENTER RIGHT_ALT  &kp RIGHT_CONTROL
-&mt LSHIFT INSERT           &kp BACKSPACE    &kp SPACE           &mkp MB2         &kp DEL                   &kp PAGE_UP       &kp PAGE_DOWN  &kp SPACE  &kp BACKSPACE        &kp RSHIFT
+&mt LSHIFT INSERT           &kp BACKSPACE    &tp_msc_up_left     &mkp MB2         &kp DEL                   &kp PAGE_UP       &kp PAGE_DOWN  &kp SPACE  &kp BACKSPACE        &kp RSHIFT
 &trans                      &trans           &trans              &trans           &trans    &trans  &trans  &trans            &trans         &trans     &trans               &trans
                             &trans           &trans              &trans           &trans    &trans  &trans  &trans            &trans         &trans     &trans
 &trans                      &trans           &trans                                                                                          &trans     &trans               &trans
@@ -214,12 +214,5 @@
         };
     };
 
-    conditional_layers {
-        compatible = "zmk,conditional-layers";
-
-        Cond_Syslayer {
-            if-layers = <1 2>;
-            then-layer = <3>;
-        };
-    };
+    conditional_layers { compatible = "zmk,conditional-layers"; };
 };
