@@ -154,6 +154,15 @@
             key-positions = <4 12>;
             slow-release;
             timeout-ms = <300>;
+            layers = <0>;
+        };
+
+        test2 {
+            bindings = <&lm 2 LEFT_ALT>;
+            key-positions = <4 33>;
+            timeout-ms = <300>;
+            slow-release;
+            layers = <0>;
         };
     };
 
