@@ -151,7 +151,7 @@
 
         COMBO_TAB_ALT {
             bindings = <&lm 2 LEFT_ALT>;
-            key-positions = <4 35>;
+            key-positions = <4 12>;
             slow-release;
             timeout-ms = <300>;
         };
@@ -167,7 +167,7 @@
             display-name = "Default";
             bindings = <
 &mt_tap ESCAPE Q  &mt LGUI W      &kp E               &mt_tap INT4 R        &kp T                            &kp Y     &kp U     &kp I        &kp O       &kp P
-&mt LCTRL A       &mt LEFT_ALT S  &lt 1 D             &mt_tap INT5 F        &kp G                            &kp H     &kp J     &kp K        &kp L       &kp SEMICOLON
+&mt LCTRL A       &mt LEFT_ALT S  &lt 2 D             &mt_tap INT5 F        &kp G                            &kp H     &kp J     &kp K        &kp L       &kp SEMICOLON
 &mt LEFT_SHIFT Z  &kp X           &mt_tap CAPSLOCK C  &kp V                 &kp B                            &kp N     &kp M     &kp COMMA    &kp PERIOD  &kp SLASH
 &kp ESCAPE        &none           &mo 3               &tap_dance_layer_213  &lt 1 SPACE  &mkp MB1  &mkp MB1  &none     &none     &none        &none       &none
                   &none           &kp RIGHT           &kp DOWN              &kp LEFT     &kp UP    &kp UP    &kp LEFT  &kp DOWN  &kp RIGHT    &none
@@ -182,7 +182,7 @@
 &kp SLASH            &mt LWIN BACKSLASH  &kp MINUS            &kp SINGLE_QUOTE      &kp EQUAL                             &kp F1            &kp F2             &kp F3            &kp F4             &kp F5
 &mt LEFT_CONTROL N1  &mt LALT N2         &mt LEFT_BRACKET N3  &mt RIGHT_BRACKET N4  &mt_tap F5 N5                         &kp F6            &kp F7             &kp F8            &kp F9             &kp F10
 &mt LSHIFT N6        &mt_tap COMMA N7    &mt_tap DOT N8       &mt_tap SEMI N9       &mt_tap BACKSLASH N0                  &kp F11           &kp F12            &kp LEFT_BRACKET  &kp RIGHT_BRACKET  &kp BACKSLASH
-&trans               &trans              &trans               &kp SPACE             &trans                &trans  &trans  &trans            &trans             &trans            &trans             &trans
+&trans               &trans              &trans               &trans                &trans                &trans  &trans  &trans            &trans             &trans            &trans             &trans
                      &trans              &trans               &trans                &trans                &trans  &trans  &trans            &trans             &trans            &trans
 &trans               &trans              &trans                                                                                                                &trans            &trans             &trans
 &kp LC(LG(LEFT))     &kp LC(LG(RIGHT))   &trans               &trans                &trans                                &kp LC(LG(LEFT))  &kp LC(LG(RIGHT))  &trans            &trans             &trans
@@ -195,7 +195,7 @@
 &mt_tap PRINTSCREEN ESCAPE  &mt LWIN PERIOD  &tp_msc_up_left     &tp_mkp_mb4_mb5  &kp TAB                   &mt_tap END HOME  &kp UP_ARROW   &kp TAB      &kp RWIN             &kp ESCAPE
 &mt LCTRL MINUS             &mt LALT ENTER   &tp_msc_down_right  &mkp MB1         &mkp MB3                  &kp LEFT_ARROW    &kp DOWN       &kp RIGHT    &mt ENTER RIGHT_ALT  &kp RIGHT_CONTROL
 &mt LSHIFT INSERT           &kp BACKSPACE    &kp SPACE           &mkp MB2         &kp DEL                   &kp BACKSPACE     &kp PAGE_DOWN  &kp PAGE_UP  &kp DELETE           &kp RSHIFT
-&trans                      &trans           &trans              &trans           &trans    &trans  &trans  &trans            &trans         &trans       &trans               &trans
+&trans                      &trans           &trans              &kp SPACE        &trans    &trans  &trans  &trans            &trans         &trans       &trans               &trans
                             &trans           &trans              &trans           &trans    &trans  &trans  &trans            &trans         &trans       &trans
 &trans                      &trans           &trans                                                                                          &trans       &trans               &trans
 &trans                      &trans           &trans              &trans           &trans                    &trans            &trans         &trans       &trans               &trans
