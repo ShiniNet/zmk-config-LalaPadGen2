@@ -41,11 +41,11 @@
             bindings = <&kp>, <&kp>;
         };
 
-        tap_dance_layer_1and2: tap_dance_layer_1and2 {
+        tap_dance_layer_123: tap_dance_layer_123 {
             compatible = "zmk,behavior-tap-dance";
-            label = "td_mo12";
+            label = "td_mo123";
             #binding-cells = <0>;
-            bindings = <&mo 1>, <&mo 2>;
+            bindings = <&mo 1>, <&mo 2>, <&mo 3>;
         };
 
         sticky_mod: sticky_mod {
