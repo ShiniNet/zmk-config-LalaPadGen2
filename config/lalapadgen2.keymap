@@ -151,7 +151,7 @@
 
         COMBO_TAB_ALT {
             bindings = <&lm 2 LEFT_ALT>;
-            key-positions = <33 4>;
+            key-positions = <4 35>;
             slow-release;
             timeout-ms = <300>;
         };
