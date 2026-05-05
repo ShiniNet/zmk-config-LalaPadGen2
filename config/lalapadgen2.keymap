@@ -41,11 +41,13 @@
             bindings = <&kp>, <&kp>;
         };
 
-        tap_dance_layer_123: tap_dance_layer_123 {
+        tap_dance_layer_213: tap_dance_layer_213 {
             compatible = "zmk,behavior-tap-dance";
-            label = "td_mo123";
+            label = "td_mo213";
             #binding-cells = <0>;
-            bindings = <&mo 1>, <&mo 2>, <&mo 3>;
+            bindings = <&mo 2>, <&mo 1>, <&mo 3>;
+
+            tapping-term-ms = <300>;
         };
 
         sticky_mod: sticky_mod {
@@ -167,7 +169,7 @@
 &mt_tap ESCAPE Q  &mt LGUI W      &kp E               &mt_tap INT4 R        &kp T                            &kp Y     &kp U     &kp I        &kp O       &kp P
 &mt LCTRL A       &mt LEFT_ALT S  &lt 1 D             &mt_tap INT5 F        &kp G                            &kp H     &kp J     &kp K        &kp L       &kp SEMICOLON
 &mt LEFT_SHIFT Z  &kp X           &mt_tap CAPSLOCK C  &kp V                 &kp B                            &kp N     &kp M     &kp COMMA    &kp PERIOD  &kp SLASH
-&kp ESCAPE        &none           &mo 3               &tap_dance_layer_123  &lt 1 SPACE  &mkp MB1  &mkp MB1  &none     &none     &none        &none       &none
+&kp ESCAPE        &none           &mo 3               &tap_dance_layer_213  &lt 1 SPACE  &mkp MB1  &mkp MB1  &none     &none     &none        &none       &none
                   &none           &kp RIGHT           &kp DOWN              &kp LEFT     &kp UP    &kp UP    &kp LEFT  &kp DOWN  &kp RIGHT    &none
 &mkp LCLK         &mkp RCLK       &mkp MCLK                                                                                      &mkp LCLK    &mkp RCLK   &mkp MCLK
 &mkp MB4          &mkp MB5        &kp LG(TAB)         &kp LG(D)             &kp LCTRL                        &mkp MB4  &mkp MB5  &kp LG(TAB)  &kp LG(D)   &kp LCTRL
