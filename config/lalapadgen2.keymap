@@ -142,13 +142,13 @@
         CONBO_ESC {
             bindings = <&kp ESCAPE>;
             key-positions = <0 1>;
-            require-prior-idle-ms = <200>;
+            require-prior-idle-ms = <300>;
         };
 
         COMBO_TAB {
             bindings = <&kp TAB>;
             key-positions = <10 11>;
-            require-prior-idle-ms = <200>;
+            require-prior-idle-ms = <300>;
         };
 
         COMBO_TAB_ALT {
@@ -156,7 +156,7 @@
             key-positions = <4 12>;
             slow-release;
             timeout-ms = <300>;
-            require-prior-idle-ms = <200>;
+            require-prior-idle-ms = <300>;
             layers = <0>;
         };
 
@@ -166,6 +166,7 @@
             timeout-ms = <300>;
             slow-release;
             layers = <0>;
+            require-prior-idle-ms = <300>;
         };
     };
 
