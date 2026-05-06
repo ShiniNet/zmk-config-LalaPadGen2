@@ -45,6 +45,7 @@
             compatible = "zmk,behavior-tap-dance";
             label = "td_mo123";
             #binding-cells = <0>;
+            tapping-term-ms = <300>;
             bindings = <&mo 1>, <&mo 2>, <&mo 3>;
         };
 
@@ -135,11 +136,13 @@
         CONBO_ESC {
             bindings = <&kp ESCAPE>;
             key-positions = <0 1>;
+            require-prior-idle-ms = <200>;
         };
 
         COMBO_TAB {
             bindings = <&kp TAB>;
             key-positions = <10 11>;
+            require-prior-idle-ms = <200>;
         };
 
         COMBO_TAB_ALT {
@@ -147,6 +150,7 @@
             key-positions = <2 32>;
             slow-release;
             timeout-ms = <300>;
+            require-prior-idle-ms = <200>;
         };
     };
 
