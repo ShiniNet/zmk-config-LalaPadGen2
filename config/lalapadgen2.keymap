@@ -41,12 +41,13 @@
             bindings = <&kp>, <&kp>;
         };
 
-        tap_dance_layer_123: tap_dance_layer_123 {
+        tap_dance_layer_213: tap_dance_layer_213 {
             compatible = "zmk,behavior-tap-dance";
-            label = "td_mo123";
+            label = "td_mo213";
             #binding-cells = <0>;
+            bindings = <&mo 2>, <&mo 1>, <&mo 3>;
+
             tapping-term-ms = <300>;
-            bindings = <&mo 1>, <&mo 2>, <&mo 3>;
         };
 
         sticky_mod: sticky_mod {
@@ -65,6 +66,7 @@
                 <&macro_param_1to1>,
                 <&macro_release>,
                 <&kp MACRO_PLACEHOLDER>;
+
             label = "STICKY_MOD";
         };
 
@@ -101,6 +103,7 @@
             label = "TP_MSC_DOWN_RIGHT";
             #binding-cells = <0>;
             bindings = <&msc SCRL_DOWN>, <&msc SCRL_RIGHT>;
+
             tapping-term-ms = <300>;
         };
 
@@ -109,6 +112,7 @@
             label = "TP_MSC_UP_LEFT";
             #binding-cells = <0>;
             bindings = <&msc SCRL_UP>, <&msc SCRL_LEFT>;
+
             tapping-term-ms = <300>;
         };
 
@@ -117,6 +121,7 @@
             label = "TP_MKP_MB4_MB5";
             #binding-cells = <0>;
             bindings = <&mkp MB4>, <&mkp MB5>;
+
             tapping-term-ms = <300>;
         };
 
@@ -124,6 +129,7 @@
             compatible = "zmk,behavior-hold-tap";
             label = "MT_TAP";
             bindings = <&tap_key>, <&kp>;
+
             #binding-cells = <2>;
             tapping-term-ms = <200>;
             flavor = "balanced";
@@ -146,12 +152,24 @@
         };
 
         COMBO_TAB_ALT {
-            bindings = <&lm 3 LEFT_ALT>;
-            key-positions = <2 32>;
+            bindings = <&lm 2 LEFT_ALT>;
+            key-positions = <4 12>;
             slow-release;
             timeout-ms = <300>;
             require-prior-idle-ms = <200>;
+            layers = <0>;
         };
+
+        test2 {
+            bindings = <&lm 2 LEFT_ALT>;
+            key-positions = <4 33>;
+            timeout-ms = <300>;
+            slow-release;
+            layers = <0>;
+        };
+    };
+
+    macros {
     };
 
     keymap {
@@ -160,62 +178,55 @@
         DEFAULT_LAYER {
             display-name = "Default";
             bindings = <
-&mt_tap ESCAPE Q  &mt LGUI W      &kp E               &mt_tap INT4 R  &kp T                                     &kp Y      &kp U     &kp I           &kp O           &kp P
-&mt LCTRL A       &mt LEFT_ALT S  &kp D               &mt_tap INT5 F  &kp G                                     &kp H      &kp J     &kp K           &kp L           &kp SEMICOLON
-&mt LEFT_SHIFT Z  &kp X           &mt_tap CAPSLOCK C  &kp V           &kp B                                     &kp N      &kp M     &kp COMMA       &kp PERIOD      &mt_tap SLASH PERIOD
-&kp ESCAPE        &mo 3           &mo 2               &lt 1 SPACE      &kp SPACE  &kp LEFT_SHIFT  &kp BACKSPACE  &kp ENTER  &mo 2     &kp LANGUAGE_2  &kp LANGUAGE_1  &kp BACKSLASH
-                   &none          &kp RIGHT           &kp DOWN        &kp LEFT   &kp UP          &kp UP         &kp LEFT   &kp DOWN  &kp RIGHT       &none
-&mkp LCLK          &mkp RCLK  &mkp MCLK                                                                               &mkp LCLK       &mkp RCLK       &mkp MCLK
-&mkp MB4           &mkp MB5   &kp LG(TAB)   &kp LG(D)  &kp LCTRL                                 &mkp MB4   &mkp MB5  &kp LG(TAB)     &kp LG(D)       &kp LCTRL
+&mt_tap ESCAPE Q  &mt LGUI W      &kp E               &mt_tap INT4 R        &kp T                            &kp Y     &kp U     &kp I        &kp O       &kp P
+&mt LCTRL A       &mt LEFT_ALT S  &lt 2 D             &mt_tap INT5 F        &kp G                            &kp H     &kp J     &kp K        &kp L       &kp SEMICOLON
+&mt LEFT_SHIFT Z  &kp X           &mt_tap CAPSLOCK C  &kp V                 &kp B                            &kp N     &kp M     &kp COMMA    &kp PERIOD  &kp SLASH
+&kp ESCAPE        &none           &mo 3               &tap_dance_layer_213  &lt 1 SPACE  &mkp MB1  &mkp MB1  &none     &none     &none        &none       &none
+                  &none           &kp RIGHT           &kp DOWN              &kp LEFT     &kp UP    &kp UP    &kp LEFT  &kp DOWN  &kp RIGHT    &none
+&mkp LCLK         &mkp RCLK       &mkp MCLK                                                                                      &mkp LCLK    &mkp RCLK   &mkp MCLK
+&mkp MB4          &mkp MB5        &kp LG(TAB)         &kp LG(D)             &kp LCTRL                        &mkp MB4  &mkp MB5  &kp LG(TAB)  &kp LG(D)   &kp LCTRL
             >;
         };
 
         SECONDARY_LAYER {
             display-name = "secondary_layer";
             bindings = <
-&kp COMMA         &mt LWIN DOT             &kp SINGLE_QUOTE          &kp MINUS        &kp EQUAL                                 &kp F1  &kp F2   &kp F3   &kp F4            &kp F5
-&mt LEFT_CONTROL N1  &mt LALT N2           &kp N3                    &kp N4           &mt_tap F5 N5                             &kp F6  &kp F7   &kp F8   &kp F9            &kp F10
-&mt LSHIFT N6        &mt_tap LEFT_BRACKET N7  &mt_tap RIGHT_BRACKET N8  &mt_tap SEMI N9  &mt_tap BACKSLASH N0                  &trans  &kp F11  &kp F12  &kp LEFT_BRACKET  &kp RIGHT_BRACKET
-&trans            &trans             &trans        &trans        &trans   &trans  &kp DEL  &trans            &trans             &kp KP_NUMBER_0  &kp KP_DOT       &kp KP_DIVIDE
-                  &trans             &trans        &trans        &trans   &trans  &trans   &trans            &trans             &trans           &trans
-&trans            &trans             &trans                                                                                     &trans           &trans           &trans
-&kp LC(LG(LEFT))  &kp LC(LG(RIGHT))  &trans        &trans        &trans                    &kp LC(LG(LEFT))  &kp LC(LG(RIGHT))  &trans           &trans           &trans
+&kp SLASH            &mt LWIN BACKSLASH  &kp MINUS            &kp SINGLE_QUOTE      &kp EQUAL                             &kp F1            &kp F2             &kp F3            &kp F4             &kp F5
+&mt LEFT_CONTROL N1  &mt LALT N2         &mt LEFT_BRACKET N3  &mt RIGHT_BRACKET N4  &mt_tap F5 N5                         &kp F6            &kp F7             &kp F8            &kp F9             &kp F10
+&mt LSHIFT N6        &mt_tap COMMA N7    &mt_tap DOT N8       &mt_tap SEMI N9       &mt_tap BACKSLASH N0                  &kp F11           &kp F12            &kp LEFT_BRACKET  &kp RIGHT_BRACKET  &kp BACKSLASH
+&trans               &trans              &trans               &trans                &trans                &trans  &trans  &trans            &trans             &trans            &trans             &trans
+                     &trans              &trans               &trans                &trans                &trans  &trans  &trans            &trans             &trans            &trans
+&trans               &trans              &trans                                                                                                                &trans            &trans             &trans
+&kp LC(LG(LEFT))     &kp LC(LG(RIGHT))   &trans               &trans                &trans                                &kp LC(LG(LEFT))  &kp LC(LG(RIGHT))  &trans            &trans             &trans
             >;
         };
 
         TERTIARY_LAYER {
             display-name = "tertiary_layer";
             bindings = <
-&mt_tap PRINTSCREEN ESCAPE  &mt LWIN PERIOD  &tp_msc_up_left     &mkp MB4  &mkp MB5                           &mt_tap END HOME  &kp UP_ARROW  &kp TAB        &kp RWIN             &kp ESCAPE
-&mt LCTRL MINUS             &mt LALT ENTER   &tp_msc_down_right  &mkp MB1  &mkp MB3                           &kp LEFT_ARROW    &kp DOWN      &kp RIGHT      &mt SPACE RIGHT_ALT  &kp RIGHT_CONTROL
-&mt LSHIFT INSERT           &kp BACKSPACE    &mo 3               &mkp MB2  &kp DEL                            &trans            &mkp MB1      &kp PAGE_DOWN  &kp PAGE_UP          &kp RSHIFT
-&trans           &trans         &trans        &trans                &trans                 &trans  &trans  &trans         &trans    &trans          &trans     &trans
-                 &trans         &trans        &trans                &trans                 &trans  &trans  &trans         &trans    &trans          &trans
-&trans           &trans         &trans                                                                                              &trans          &trans     &trans
-&trans           &trans         &trans        &trans                &trans                                 &trans         &trans    &trans          &trans     &trans
+&mt_tap PRINTSCREEN ESCAPE  &mt LWIN PERIOD  &tp_msc_up_left     &tp_mkp_mb4_mb5  &kp TAB                   &mt_tap END HOME  &kp UP_ARROW   &kp TAB      &kp RWIN             &kp ESCAPE
+&mt LCTRL MINUS             &mt LALT ENTER   &tp_msc_down_right  &mkp MB1         &mkp MB3                  &kp LEFT_ARROW    &kp DOWN       &kp RIGHT    &mt ENTER RIGHT_ALT  &kp RIGHT_CONTROL
+&mt LSHIFT INSERT           &kp BACKSPACE    &kp SPACE           &mkp MB2         &kp DEL                   &kp BACKSPACE     &kp PAGE_DOWN  &kp PAGE_UP  &kp DELETE           &kp RSHIFT
+&trans                      &trans           &trans              &kp SPACE        &trans    &trans  &trans  &trans            &trans         &trans       &trans               &trans
+                            &trans           &trans              &trans           &trans    &trans  &trans  &trans            &trans         &trans       &trans
+&trans                      &trans           &trans                                                                                          &trans       &trans               &trans
+&trans                      &trans           &trans              &trans           &trans                    &trans            &trans         &trans       &trans               &trans
             >;
         };
 
         SYSTEM_LAYER {
             display-name = "system_layer";
             bindings = <
-&kp F1   &kp F2   &kp F3   &kp F4   &kp F5                   &out OUT_TOG                   &bt BT_SEL 0                   &bt BT_SEL 1                   &bt BT_SEL 2                   &bt BT_SEL 3
-&kp F6   &kp F7   &kp F8   &kp F9   &kp F10                  &sys_reset                     &bootloader                    &bt BT_CLR                     &bt BT_CLR_ALL                 &trans
-&kp F11  &kp F12  &kp F13  &kp F14  &kp F15                  &zip_dyn_scale ZDS_XY ZDS_INC  &zip_dyn_scale ZDS_XY ZDS_DEC  &zip_dyn_scale ZDS_SC ZDS_INC  &zip_dyn_scale ZDS_SC ZDS_DEC  &zip_dyn_scale ZDS_ALL ZDS_RST
-&trans   &trans   &trans   &trans   &trans   &trans  &trans  &trans                         &trans                         &trans                         &trans                         &trans
-         &trans   &trans   &trans   &trans   &trans  &trans  &trans                         &trans                         &trans                         &trans
-&trans   &trans   &trans                                                                                                   &trans                         &trans                         &trans
-&trans   &trans   &trans   &trans   &trans                   &trans                         &trans                         &trans                         &trans                         &trans
+&kp C_MUTE                    &mt_tap C_BRIGHTNESS_DEC C_BRIGHTNESS_INC  &kp K_CONTEXT_MENU  &kp UP_ARROW    &mt END HOME                     &out OUT_TOG                   &bt BT_SEL 0                   &bt BT_SEL 1                   &bt BT_SEL 2                   &bt BT_SEL 3
+&mt LEFT_CONTROL C_VOLUME_UP  &mt LEFT_ALT ENTER                         &kp LEFT_ARROW      &kp DOWN_ARROW  &kp RIGHT_ARROW                  &sys_reset                     &mkp MB1                       &bt BT_CLR                     &bt BT_CLR_ALL                 &bootloader
+&mt LEFT_SHIFT C_VOLUME_DOWN  &kp BACKSPACE                              &kp PAGE_UP         &kp PAGE_DOWN   &kp DEL                          &zip_dyn_scale ZDS_XY ZDS_INC  &zip_dyn_scale ZDS_XY ZDS_DEC  &zip_dyn_scale ZDS_SC ZDS_INC  &zip_dyn_scale ZDS_SC ZDS_DEC  &zip_dyn_scale ZDS_ALL ZDS_RST
+&trans                        &trans                                     &trans              &trans          &trans           &trans  &trans  &trans                         &trans                         &trans                         &trans                         &trans
+                              &trans                                     &trans              &trans          &trans           &trans  &trans  &trans                         &trans                         &trans                         &trans
+&trans                        &trans                                     &trans                                                                                                                             &trans                         &trans                         &trans
+&trans                        &trans                                     &trans              &trans          &trans                           &trans                         &trans                         &trans                         &trans                         &trans
             >;
         };
     };
 
-    conditional_layers {
-        compatible = "zmk,conditional-layers";
-
-        Cond_Syslayer {
-            if-layers = <1 2>;
-            then-layer = <3>;
-        };
-    };
+    conditional_layers { compatible = "zmk,conditional-layers"; };
 };
