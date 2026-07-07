@@ -20,5 +20,8 @@ manifest:
     - name: zmk-rgbled-widget
       remote: caksoylar
       revision: v0.3
+    - name: zmk-smart-toggle
+      remote: caksoylar
+      revision: main
   self:
     path: config
