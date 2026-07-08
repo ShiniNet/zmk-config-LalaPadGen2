@@ -43,6 +43,12 @@
             #binding-cells = <0>;
             bindings = <&mo 2>, <&mo 3>;
         };
+
+        swapper: swapper {
+            compatible = "zmk,behavior-smart-toggle";
+            #binding-cells = <0>;
+            bindings = <&kp LALT>, <&kp TAB>;
+        };
     };
 
     combos {
