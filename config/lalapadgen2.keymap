@@ -48,7 +48,7 @@
             compatible = "zmk,behavior-smart-toggle";
             #binding-cells = <0>;
             bindings = <&kp LALT>, <&kp TAB>;
-            ignored-key-positions = <7 8>;
+            ignored-key-positions = <7>, <8>;
         };
     };
 
