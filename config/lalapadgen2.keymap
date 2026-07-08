@@ -101,13 +101,13 @@
         DEFAULT_LAYER {
             display-name = "Default";
             bindings = <
-&kp Q               &kp P      &kp U         &kp Y             &kp COMMA                                   &kp J      &kp D             &kp H          &kp G          &kp W
-&mt LEFT_CONTROL I  &kp O      &kp E         &kp A             &kp PERIOD                                  &kp K      &kp T             &kp N          &kp S          &mt RIGHT_CONTROL R
-&mt2 LEFT_SHIFT Z   &kp X      &kp MINUS     &kp C             &kp SLASH                                   &kp M      &kp L             &kp F          &kp B          &mt RSHIFT V
-&kp LCTRL           &kp LWIN   &kp LEFT_ALT  &lt 2 LANGUAGE_2  &lt 5 SPACE  &kp LEFT_SHIFT  &kp BACKSPACE  &kp ENTER  &lt 3 LANGUAGE_1  &kp RIGHT_ALT  &kp SEMICOLON  &kp BACKSLASH
-                    &none      &kp RIGHT     &kp DOWN          &kp LEFT     &kp UP          &kp UP         &kp LEFT   &kp DOWN          &kp RIGHT      &none
-&mkp LCLK           &mkp RCLK  &mkp MCLK                                                                                                &mkp LCLK      &mkp RCLK      &mkp MCLK
-&mkp MB4            &mkp MB5   &kp LG(TAB)   &kp LG(D)         &kp LCTRL                                   &mkp MB4   &mkp MB5          &kp LG(TAB)    &kp LG(D)      &kp LCTRL
+&kp Q               &kp P      &kp U         &kp Y             &kp COMMA                                   &kp J        &kp D             &kp H          &kp G          &kp W
+&mt LEFT_CONTROL I  &kp O      &kp E         &kp A             &kp PERIOD                                  &kp K        &kp T             &kp N          &kp S          &mt RIGHT_CONTROL R
+&mt2 LEFT_SHIFT Z   &kp X      &kp MINUS     &kp C             &kp SLASH                                   &kp M        &kp L             &kp F          &kp B          &mt RSHIFT V
+&kp LCTRL           &kp LWIN   &kp LEFT_ALT  &lt 2 LANGUAGE_2  &lt 5 SPACE  &kp LEFT_SHIFT  &kp BACKSPACE  &lt 7 ENTER  &lt 3 LANGUAGE_1  &kp RIGHT_ALT  &kp SEMICOLON  &kp BACKSLASH
+                    &none      &kp RIGHT     &kp DOWN          &kp LEFT     &kp UP          &kp UP         &kp LEFT     &kp DOWN          &kp RIGHT      &none
+&mkp LCLK           &mkp RCLK  &mkp MCLK                                                                                                  &mkp LCLK      &mkp RCLK      &mkp MCLK
+&mkp MB4            &mkp MB5   &kp LG(TAB)   &kp LG(D)         &kp LCTRL                                   &mkp MB4     &mkp MB5          &kp LG(TAB)    &kp LG(D)      &kp LCTRL
             >;
         };
 
