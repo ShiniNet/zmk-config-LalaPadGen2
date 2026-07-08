@@ -188,7 +188,7 @@
 
         layer_7 {
             bindings = <
-&trans  &trans  &trans  &trans  &trans                  &mkp MB4         &mkp MB5     &kp LC(T)  &kp TAB  &trans
+&trans  &trans  &trans  &trans  &trans                  &mkp MB4         &mkp MB5     &kp LC(T)  &swapper  &trans
 &trans  &trans  &trans  &trans  &trans                  &kp LC(LS(TAB))  &kp LC(TAB)  &kp LC(W)  &trans   &trans
 &trans  &trans  &trans  &trans  &trans                  &trans           &trans       &trans     &trans   &trans
 &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans           &trans       &trans     &trans   &trans
