@@ -300,11 +300,11 @@ svg { background: #1a1a2e; }
 </a></g>
 <g transform="translate(532, 196)" class="key keypos-39">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap">かな</text>
+<text x="0" y="0" class="key tap">IME切替</text>
 </g>
 <g transform="translate(588, 196)" class="key keypos-40">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap">英数</text>
+<text x="0" y="0" class="key tap">英数*</text>
 </g>
 <g transform="translate(644, 196)" class="key keypos-41">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
