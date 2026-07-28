@@ -15,8 +15,8 @@ draw_config:
 
 parse_config:
   zmk_keycode_map:
-    INT4: "かな"
-    INT5: "英数"
+    LA(GRAVE): "IME切替"
+    INT5: "英数*"
     LG(TAB): "⊞+Tab"
     LG(D): "⊞+D"
     LC(LG(LEFT)): "⊞←"
