@@ -1,0 +1,22 @@
+config LALAPAD_OS_LAYER
+    bool "Activate the Mac base layer automatically from the selected BLE profile"
+    depends on ZMK_BLE && (!ZMK_SPLIT || ZMK_SPLIT_ROLE_CENTRAL)
+    default y
+
+if LALAPAD_OS_LAYER
+
+config LALAPAD_OS_LAYER_MAC_LAYER
+    int "Keymap layer index of the Mac base layer (MAC_DEFAULT_LAYER in the keymap)"
+    default 4
+
+config LALAPAD_OS_LAYER_MAC_PROFILES
+    hex "Bitmask of BLE profile indexes that use the Mac layers (bit0 = BT_SEL 0)"
+    default 0x6
+    help
+      Default 0x6 = BT_SEL 1 (Mac) and BT_SEL 2 (iPad). BT_SEL 0 = Windows.
+
+config LALAPAD_OS_LAYER_BOOT_DELAY_MS
+    int "Delay after boot before applying the layer for the restored profile"
+    default 1500
+
+endif
