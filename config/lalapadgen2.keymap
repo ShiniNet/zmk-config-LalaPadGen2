@@ -93,13 +93,13 @@
         SECONDARY_LAYER {
             display-name = "secondary_layer";
             bindings = <
-&kp NUMBER_6      &kp NUMBER_7       &kp NUMBER_8    &kp NUMBER_9     &kp NUMBER_0                  &kp LS(NUMBER_6)  &kp LS(NUMBER_7)   &kp LS(NUMBER_8)  &kp LS(NUMBER_9)  &kp LS(NUMBER_0)
-&kp NUMBER_1      &kp NUMBER_2       &kp NUMBER_3    &kp NUMBER_4     &kp NUMBER_5                  &kp LS(NUMBER_1)  &kp LS(NUMBER_2)   &kp LS(NUMBER_3)  &kp LS(NUMBER_4)  &kp LS(NUMBER_5)
-&kp LEFT_BRACKET  &kp RIGHT_BRACKET  &kp LEFT_BRACE  &kp RIGHT_BRACE  &kp PIPE                      &trans            &trans             &trans            &trans            &trans
-&trans            &trans             &trans          &trans           &trans        &trans  &trans  &trans            &trans             &trans            &kp KP_DOT        &kp KP_DIVIDE
-                  &trans             &trans          &trans           &trans        &trans  &trans  &trans            &trans             &trans            &trans
-&trans            &trans             &trans                                                                                              &trans            &trans            &trans
-&kp LC(LG(LEFT))  &kp LC(LG(RIGHT))  &trans          &trans           &trans                        &kp LC(LG(LEFT))  &kp LC(LG(RIGHT))  &trans            &trans            &trans
+&kp NUMBER_6                 &kp NUMBER_7       &kp NUMBER_8    &kp NUMBER_9     &kp NUMBER_0                  &kp LS(NUMBER_6)  &kp LS(NUMBER_7)   &kp LS(NUMBER_8)  &kp LS(NUMBER_9)  &kp LS(NUMBER_0)
+&kp NUMBER_1                 &kp NUMBER_2       &kp NUMBER_3    &kp NUMBER_4     &kp NUMBER_5                  &kp LS(NUMBER_1)  &kp LS(NUMBER_2)   &kp LS(NUMBER_3)  &kp LS(NUMBER_4)  &kp LS(NUMBER_5)
+&mt LEFT_SHIFT LEFT_BRACKET  &kp RIGHT_BRACKET  &kp LEFT_BRACE  &kp RIGHT_BRACE  &kp PIPE                      &kp MINUS         &kp EQUAL          &trans            &trans            &mt RIGHT_SHIFT DOUBLE_QUOTES
+&trans                       &trans             &trans          &trans           &trans        &trans  &trans  &trans            &trans             &trans            &kp KP_DOT        &kp KP_DIVIDE
+                             &trans             &trans          &trans           &trans        &trans  &trans  &trans            &trans             &trans            &trans
+&trans                       &trans             &trans                                                                                              &trans            &trans            &trans
+&kp LC(LG(LEFT))             &kp LC(LG(RIGHT))  &trans          &trans           &trans                        &kp LC(LG(LEFT))  &kp LC(LG(RIGHT))  &trans            &trans            &trans
             >;
         };
 
