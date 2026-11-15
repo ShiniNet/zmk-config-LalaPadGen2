@@ -3,6 +3,10 @@
  * turn on the Mac base layer, every other profile turns it off (Windows).
  * USB output does not change the layer; it follows the selected BT profile.
  * &tog MAC_DEFAULT_LAYER in the keymap overrides it until the next profile change.
+ *
+ * ble.c also raises zmk_ble_active_profile_changed on every connect/disconnect
+ * of the active profile, so only react when the profile index actually changes;
+ * otherwise a reconnect would undo the manual override.
  */
 
 #include <zephyr/kernel.h>
@@ -34,7 +38,17 @@ static void apply_profile(int index) {
     }
 }
 
-static void apply_work_cb(struct k_work *work) { apply_profile(zmk_ble_active_profile_index()); }
+static int applied_index = -1; /* -1: not applied yet (boot) */
+
+static void apply_work_cb(struct k_work *work) {
+    int index = zmk_ble_active_profile_index();
+
+    if (index == applied_index) {
+        return;
+    }
+    applied_index = index;
+    apply_profile(index);
+}
 
 static K_WORK_DELAYABLE_DEFINE(apply_work, apply_work_cb);
 

@@ -1,6 +1,6 @@
 config LALAPAD_OS_LAYER
     bool "Activate the Mac base layer automatically from the selected BLE profile"
-    depends on ZMK_BLE && (!ZMK_SPLIT || ZMK_SPLIT_ROLE_CENTRAL)
+    depends on SHIELD_LALAPADGEN2_RIGHT && ZMK_BLE && ZMK_SPLIT_ROLE_CENTRAL
     default y
 
 if LALAPAD_OS_LAYER
