@@ -71,6 +71,16 @@
   .key.system { background: var(--system); border-color: var(--system-b); }
   .key.layer { background: var(--layer); border-color: var(--layer-b); }
   .key.mod { background: var(--mod); border-color: var(--mod-b); }
+  .key.osdiff { box-shadow: 0 0 0 3px #7b3fe4; }
+  .key.osdiff::after { content: "Win"; position: absolute; top: 2px; right: 3px; font-size: 8px; font-weight: 800;
+                       color: #fff; background: #7b3fe4; border-radius: 3px; padding: 0 3px; line-height: 12px; }
+  .key.five.osdiff::after { display: none; }
+  .ostoggle { display: flex; gap: 8px; margin: 18px 0 0; align-items: center; flex-wrap: wrap; }
+  .ostoggle .lab { color: var(--muted); font-size: 13px; margin-right: 4px; }
+  .osbtn { appearance: none; border: 1px solid var(--line); background: #fff; color: var(--text); border-radius: 999px;
+           padding: 7px 14px; font: inherit; font-size: 14px; cursor: pointer; }
+  .osbtn[aria-pressed="true"] { border-color: #7b3fe4; background: #f1eafe; color: #4b1fa3; font-weight: 700; }
+  .osbtn.mac[aria-pressed="true"] { border-color: #2c67c7; background: #e9f1ff; color: #174b9b; }
   .combo { position: absolute; transform: translate(-50%, -50%); z-index: 3; background: #1d2430; color: #fff;
            font-size: 10px; font-weight: 700; border-radius: 999px; padding: 2px 7px; white-space: nowrap;
            box-shadow: 0 2px 6px rgba(0,0,0,.2); }
@@ -98,10 +108,11 @@
   <header>
     <div>
       <h1>LaLapad Gen2 大西配列キーマップ</h1>
-      <div class="subtitle">config/lalapadgen2.keymap から生成。実機のカラムスタッガード（列ごとの縦ずれ）で表示。文字は Mac の JIS 入力として表示（小さい字は ZMK のキー名）。</div>
+      <div class="subtitle">config/lalapadgen2.keymap から生成。実機のカラムスタッガード（列ごとの縦ずれ）で表示。文字は JIS 入力として表示（小さい字は ZMK のキー名）。接続先が Windows（Bluetooth プロファイル 4・5）のときの割当は「Windows」に切り替えて見る。紫の枠＝Mac と割当が違うキー。</div>
     </div>
     <div class="meta" id="meta"></div>
   </header>
+  <div class="ostoggle" id="ostoggle"></div>
   <nav class="tabs" id="tabs"></nav>
   <section class="summary">
     <div class="box"><span class="t">レイヤー</span><div class="m" id="layerTitle"></div></div>
@@ -122,7 +133,12 @@
     <div class="box">
       <h2>トラックパッドの操作</h2>
       <table id="tpTable"></table>
-      <p class="note">macOS のトラックパッドの作法に合わせた割当。1本指で移動、2本指でスクロール（慣性あり）、カーソルの慣性はなし。薄い字は下のレイヤーから引き継いだ割当。</p>
+      <p class="note">Mac 表示は macOS のトラックパッドの作法、Windows 表示は Windows の相当操作（仮想デスクトップ・タスクビューなど）。1本指で移動、2本指でスクロール（慣性あり）、カーソルの慣性はなし。薄い字は下のレイヤーから引き継いだ割当。</p>
+    </div>
+    <div class="box">
+      <h2>接続先 OS で変わる割当</h2>
+      <table id="osTable"></table>
+      <p class="note" id="osNote"></p>
     </div>
     <div class="box">
       <h2>5方向スイッチ</h2>
@@ -160,6 +176,17 @@ const JIS_SHIFT = { N1: "!", N2: "\"", N3: "#", N4: "$", N5: "%", N6: "&", N7: "
                     COMMA: "<", DOT: ">", SLASH: "?", INTERNATIONAL_1: "_", SQT: "*", SEMI: "+", LBKT: "`", RBKT: "{", NON_US_HASH: "}" };
 const MODSYM = { LC: "⌃", LA: "⌥", LG: "⌘", LS: "⇧", RC: "⌃", RA: "⌥", RG: "⌘", RS: "⇧" };
 
+const WIN_SHORTCUTS = {
+  "LC(Z)": ["取り消し（Ctrl+Z）", "edit"], "LC(X)": ["カット（Ctrl+X）", "edit"], "LC(C)": ["コピー（Ctrl+C）", "edit"],
+  "LC(V)": ["ペースト（Ctrl+V）", "edit"], "LC(Y)": ["やり直し（Ctrl+Y）", "edit"],
+  "LC(LG(LEFT))": ["左の仮想デスクトップへ（Win+Ctrl+←）", "system"], "LC(LG(RIGHT))": ["右の仮想デスクトップへ（Win+Ctrl+→）", "system"],
+  "LG(TAB)": ["タスクビュー（Win+Tab）", "system"], "LG(D)": ["デスクトップを表示（Win+D）", "system"],
+  "LG(LS(S))": ["画面の切り取り（Win+Shift+S）", "system"],
+};
+const WIN_KEYS = { LGUI: ["⊞ Win", "mod"], RGUI: ["⊞ Win", "mod"], LCTRL: ["Ctrl", "mod"], RCTRL: ["Ctrl", "mod"],
+                   LALT: ["Alt", "mod"], RALT: ["Alt", "mod"], LSHIFT: ["Shift", "mod"], RSHIFT: ["Shift", "mod"] };
+const WIN_MODSYM = { LC: "Ctrl+", LA: "Alt+", LG: "Win+", LS: "Shift+", RC: "Ctrl+", RA: "Alt+", RG: "Win+", RS: "Shift+" };
+let OS = "mac";   // 表示中の接続先 OS（mac / win）
 const MAC_SHORTCUTS = {
   "LC(LEFT)": ["左の操作スペースへ（⌃←）", "system"], "LC(RIGHT)": ["右の操作スペースへ（⌃→）", "system"],
   "LC(UP)": ["Mission Control（⌃↑）", "system"], "LC(DOWN)": ["アプリケーションウインドウ（⌃↓）", "system"],
@@ -168,21 +195,26 @@ const MAC_SHORTCUTS = {
   "LG(Z)": ["取り消し（⌘Z）", "edit"], "LG(X)": ["カット（⌘X）", "edit"], "LS(LG(Z))": ["やり直し（⇧⌘Z）", "edit"],
 };
 function keyLabel(code) {
+  if (WIN_SHORTCUTS[code]) return WIN_SHORTCUTS[code];
   if (MAC_SHORTCUTS[code]) return MAC_SHORTCUTS[code];
+  if (OS === "win" && WIN_KEYS[code]) return WIN_KEYS[code];
   const sh = code.match(/^[LR]S\(([A-Z0-9_]+)\)$/);
   if (sh && JIS_SHIFT[sh[1]]) return [JIS_SHIFT[sh[1]], "punct"];          // ⇧＋記号・数字 = JIS の文字
   const m = code.match(/^(L[CAGS]|R[CAGS])\((.*)\)$/);
-  if (m) { const inner = keyLabel(m[2]); return [MODSYM[m[1]] + inner[0], inner[1] === "letter" ? "edit" : inner[1]]; }
+  if (m) { const inner = keyLabel(m[2]); return [(OS === "win" ? WIN_MODSYM : MODSYM)[m[1]] + inner[0], inner[1] === "letter" ? "edit" : inner[1]]; }
   if (/^[A-Z]$/.test(code)) return [code, "letter"];
   if (/^N\d$/.test(code)) return [code.slice(1), "number"];
   if (/^KP_N\d$/.test(code)) return ["KP " + code.slice(4), "number"];
   if (/^F\d+$/.test(code)) return [code, "function"];
   if (JIS[code]) return [JIS[code], "punct"];
   if (code === "INTERNATIONAL_1") return ["ろ（\\）", "punct"];
+  if (code === "INTERNATIONAL_4") return ["変換", "edit"];
+  if (code === "INTERNATIONAL_5") return ["無変換", "edit"];
   if (KEYS[code]) return KEYS[code];
   return [code, "system"];
 }
 
+function LAYERS(os) { return (os || OS) === "win" ? DATA.layers_win : DATA.layers; }
 function layerName(i) { const L = DATA.layers[i]; return L ? L.name : "L" + i; }
 
 function describe(b) {
@@ -205,7 +237,8 @@ function describe(b) {
   if (DATA.macros && DATA.macros[beh]) return { tap: DATA.macros[beh].label, cls: "system" };
   if (beh === "mkp" || beh === "mmv" || beh === "msc") return { tap: MOUSE[args[0]] || args[0], cls: "mouse" };
   if (beh === "bt") {
-    const t = args[0] === "BT_SEL" ? "BT " + args[1] : args[0] === "BT_CLR" ? "BT 登録解除" : args[0] === "BT_CLR_ALL" ? "BT 全解除" : args.join(" ");
+    const n = +args[1] + 1;   // 表示は 1 始まり（ZMK の BT_SEL は 0 始まり）
+    const t = args[0] === "BT_SEL" ? "BT " + n + ((DATA.win_profiles || []).includes(n) ? "（Win）" : "（Mac）") : args[0] === "BT_CLR" ? "BT 登録解除" : args[0] === "BT_CLR_ALL" ? "BT 全解除" : args.join(" ");
     return { tap: t, cls: "system" };
   }
   if (beh === "out") return { tap: "USB/BT 切替", cls: "system" };
@@ -219,7 +252,7 @@ function describe(b) {
 function triggers(i) {
   const out = [];
   DATA.conditional.forEach(c => { if (c.then === i) out.push(c.if.map(layerName).join(" と ") + " を同時に出す（両方の長押しキーを押す）"); });
-  const L0 = DATA.layers[0].bindings;
+  const L0 = LAYERS()[0].bindings;
   L0.forEach((b, pos) => {
     const p = b.split(" ");
     if ((p[0] === "&lt" || p[0] === "&mo") && +p[1] === i) {
@@ -227,7 +260,7 @@ function triggers(i) {
       out.push((p[0] === "&lt" ? d.tap + " を長押し" : d.tap + " を押している間") + "（位置 " + pos + "）");
     }
   });
-  DATA.layers.forEach((L, j) => L.bindings.forEach((b, pos) => {
+  LAYERS().forEach((L, j) => L.bindings.forEach((b, pos) => {
     if (b === "&to " + i && j !== i) out.push("L" + j + " " + L.name + " の「L" + i + " へ」（位置 " + pos + "）を押す");
   }));
   if (i === 0) out.push("常に有効（いちばん下のレイヤー）");
@@ -239,12 +272,14 @@ function stackBelow(i) {
   if (i !== 0) below.push(0);
   return below;
 }
-function resolve(i, pos) {
-  const b = DATA.layers[i].bindings[pos];
+function resolve(i, pos, os) {
+  const LS = LAYERS(os);
+  const b = LS[i].bindings[pos];
   if (b !== "&trans") return { b, from: i };
-  for (const j of stackBelow(i)) { const bb = DATA.layers[j].bindings[pos]; if (bb !== "&trans") return { b: bb, from: j }; }
+  for (const j of stackBelow(i)) { const bb = LS[j].bindings[pos]; if (bb !== "&trans") return { b: bb, from: j }; }
   return { b: "&none", from: i };
 }
+function osDiff(i, pos) { return resolve(i, pos, "mac").b !== resolve(i, pos, "win").b; }
 function isEmpty(i) { return DATA.layers[i].bindings.slice(0, 52).every(b => b === "&none" || b === "&trans"); }
 
 // ---- 描画 ---------------------------------------------------------------------------
@@ -293,14 +328,16 @@ function render() {
     const r = resolve(i, pos);
     const d = describe(r.b);
     const el = document.createElement("div");
-    el.className = "key " + (d.cls || "none") + (r.from !== i ? " inherit" : "") + (FIVE.has(pos) ? " five" : "") + (CENTER.has(pos) ? " center" : "");
+    el.className = "key " + (d.cls || "none") + (r.from !== i ? " inherit" : "") + (FIVE.has(pos) ? " five" : "") + (CENTER.has(pos) ? " center" : "") +
+                   (OS === "win" && osDiff(i, pos) ? " osdiff" : "");
     const gap = FIVE.has(pos) ? 2 : 4;
     Object.assign(el.style, { left: (k.x * U + gap / 2) + "px", top: (k.y * U + gap / 2) + "px", width: (k.w * U - gap) + "px", height: (k.h * U - gap) + "px" });
     if (k.rot) el.style.transform = `rotate(${k.rot}deg)`;
     const len = (d.tap || "").length;
     const size = FIVE.has(pos) ? "" : len > 6 ? " xs" : len > 3 ? " s" : "";
     el.innerHTML = `<span class="pos">${pos}${d.code ? " · " + d.code : ""}</span><span class="tap${size}">${d.tap || ""}</span><span class="hold">${d.hold || (r.from !== i ? "L" + r.from + " から" : "")}</span>`;
-    el.title = `位置 ${pos}${FIVE.has(pos) ? "（5方向スイッチ " + FIVE_NAMES[pos] + "）" : ""}\n${r.b}${r.from !== i ? "\n（L" + r.from + " から引き継ぎ）" : ""}`;
+    const other = OS === "win" && osDiff(i, pos) ? "\nMac では: " + resolve(i, pos, "mac").b : "";
+    el.title = `位置 ${pos}${FIVE.has(pos) ? "（5方向スイッチ " + FIVE_NAMES[pos] + "）" : ""}\n${r.b}${r.from !== i ? "\n（L" + r.from + " から引き継ぎ）" : ""}${other}`;
     board.appendChild(el);
   });
 
@@ -327,10 +364,29 @@ function render() {
     return `<tr${on ? "" : ' style="opacity:.4"'}><td>${keysTxt}</td><td>${describe(c.binding).tap}</td><td>${c.layers ? c.layers.map(n => "L" + n).join(" ") : "全レイヤー"}</td></tr>`;
   }).join("");
 
+  // 接続先 OS で変わる割当（このレイヤー）
+  const ot = document.getElementById("osTable");
+  const rowsOs = [];
+  const TPN = { LCLK: "1本指タップ", RCLK: "2本指タップ", MCLK: "3本指タップ", LEFT: "3本指で右へスワイプ", RIGHT: "3本指で左へスワイプ",
+                UP: "3本指で上へスワイプ", DOWN: "3本指で下へスワイプ", PINCH: "ピンチ中の修飾キー" };
+  for (let pos = 0; pos < DATA.layers[i].bindings.length; pos++) {
+    if (!osDiff(i, pos)) continue;
+    const save = OS;
+    OS = "mac"; const dm = describe(resolve(i, pos, "mac").b);
+    OS = "win"; const dw = describe(resolve(i, pos, "win").b);
+    OS = save;
+    const place = FIVE.has(pos) ? "5方向 " + FIVE_NAMES[pos] : DATA.trackpad[pos] ? "パッド" + (DATA.trackpad[pos].side === "L" ? "左" : "右") + " " + (TPN[DATA.trackpad[pos].gesture] || DATA.trackpad[pos].gesture) : "位置 " + pos;
+    rowsOs.push(`<tr><td>${place}</td><td>${dm.tap || "なし"}</td><td>${dw.tap || "なし"}</td></tr>`);
+  }
+  ot.innerHTML = rowsOs.length ? "<tr><th>場所</th><th>Mac（BT 1〜3・USB）</th><th>Windows（BT " + (DATA.win_profiles || []).join("・") + "）</th></tr>" + rowsOs.join("")
+                               : "<tr><td>このレイヤーでは違いなし</td></tr>";
+  document.getElementById("osNote").textContent =
+    "Bluetooth のプロファイル " + (DATA.win_profiles || []).join("・") + " に接続しているあいだは Windows 用、それ以外（プロファイル 1〜3、USB）は Mac 用。キーを押した瞬間の接続先で決まる。修飾キーは物理位置を変えず、⌘ の位置が Ctrl、Ctrl の位置が Win キーになる。英数・かなは 無変換・変換（MS-IME で「無変換＝IME オフ、変換＝IME オン」の設定が要る）。";
+
   const mt = document.getElementById("macroTable");
   const ms = Object.entries(DATA.macros || {});
   mt.innerHTML = ms.length === 0 ? "<tr><td>なし</td></tr>" : "<tr><th>名前</th><th>動き</th><th>置き場所</th></tr>" + ms.map(([name, m]) => {
-    const where = DATA.layers.flatMap((L, j) => L.bindings.map((b, pos) => b === "&" + name ? "L" + j + " 位置 " + pos + (FIVE.has(pos) ? "（5方向スイッチ " + FIVE_NAMES[pos] + "）" : "") : null)).filter(Boolean);
+    const where = LAYERS("mac").flatMap((L, j) => L.bindings.map((b, pos) => b === "&" + name ? "L" + j + " 位置 " + pos + (FIVE.has(pos) ? "（5方向スイッチ " + FIVE_NAMES[pos] + "）" : "") : null)).filter(Boolean);
     return `<tr><td>${name.toUpperCase()}</td><td>${m.detail}</td><td>${where.join("、") || "なし"}</td></tr>`;
   }).join("");
 
@@ -350,7 +406,17 @@ function render() {
   }).join("");
 }
 
+function renderOsToggle() {
+  const box = document.getElementById("ostoggle");
+  const prof = (DATA.win_profiles || []).join("・");
+  box.innerHTML = `<span class="lab">接続先</span>` +
+    `<button class="osbtn mac" aria-pressed="${OS === "mac"}" data-os="mac">Mac（BT 1〜3・USB）</button>` +
+    `<button class="osbtn win" aria-pressed="${OS === "win"}" data-os="win">Windows（BT ${prof}）</button>`;
+  box.querySelectorAll("button").forEach(b => b.onclick = () => { OS = b.dataset.os; renderOsToggle(); render(); });
+}
+
 function init() {
+  renderOsToggle();
   const m = DATA.meta;
   document.getElementById("meta").innerHTML =
     `keymap ${m.keymap_sha256}（最終コミット ${m.commit}・${m.branch}）${m.dirty ? ' <span class="warn">（未コミットの変更あり）</span>' : ""}<br>生成 ${m.generated}`;
@@ -367,6 +433,7 @@ function init() {
   document.getElementById("legend").innerHTML = legend.map(([c, t]) =>
     `<span><i class="sw" style="background:var(--${c});border-color:var(--${c}-b)"></i>${t}</span>`).join("") +
     (DATA.combos.length ? `<span><i class="sw" style="background:#1d2430;border-color:#1d2430"></i>同時押し</span>` : "") +
+    `<span><i class="sw" style="background:#fff;border:3px solid #7b3fe4"></i>Windows 表示で Mac と違うキー</span>` +
     `<span>点線のキー＝下のレイヤーから引き継ぎ</span><span>● と点線＝5方向スイッチの実機の位置</span><span>配置は製品写真から読み取った推定（±0.1キー程度）</span>`;
   document.addEventListener("keydown", e => {
     if (e.key === "ArrowRight") { current = (current + 1) % DATA.layers.length; render(); }

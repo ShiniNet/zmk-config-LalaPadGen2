@@ -18,6 +18,7 @@ config/lalapadgen2.keymap は上書きされる。
                                             上下はレイヤー 0〜4 で apply_gen2 が上書き（REQ-192・193 の決定を優先）
     トラックパッドの仮想キー（52..67）    → macOS のトラックパッドの作法に合わせた割当（REQ-192）
     コンボ・マクロ                         → .vil の定義をそのまま移す（REQ-194）。.vil にないコンボは作らない
+    接続先 OS で変わる割当                 → OS_MORPHS の os-morph に包む（REQ-195。Mac 用は .vil どおり）
 
 置けなかったキー（Gen2 側の決めごとで上書きしたもの）は実行時に一覧を出す。
 """
@@ -193,7 +194,7 @@ SYSTEM = (
     ["&kp F1", "&kp F2", "&kp F3", "&kp F4", "&kp F5",
      "&out OUT_TOG", "&bt BT_SEL 0", "&bt BT_SEL 1", "&bt BT_SEL 2", "&bt BT_SEL 3"]
     + ["&kp F6", "&kp F7", "&kp F8", "&kp F9", "&kp F10",
-       "&sys_reset", "&bootloader", "&bt BT_CLR", "&bt BT_CLR_ALL", "&trans"]
+       "&sys_reset", "&bootloader", "&bt BT_CLR", "&bt BT_CLR_ALL", "&bt BT_SEL 4"]
     + ["&kp F11", "&kp F12", "&kp F13", "&kp F14", "&kp F15",
        "&zip_dyn_scale ZDS_XY ZDS_INC", "&zip_dyn_scale ZDS_XY ZDS_DEC",
        "&zip_dyn_scale ZDS_SC ZDS_INC", "&zip_dyn_scale ZDS_SC ZDS_DEC",
@@ -292,6 +293,56 @@ def zmk_macros(vil):
     return out
 
 
+# ---- 接続先 OS で変わる割当（REQ-195）----------------------------------------------------------
+# Bluetooth プロファイル 4・5（ZMK の BT_SEL 3・4）は Windows 用、1〜3 と USB は Mac 用。
+# .vil 由来の Mac の割当のうち、Windows で意味が変わるものを os-morph（src/behaviors/behavior_os_morph.c）に包む。
+# 修飾キーの物理位置は変えず、送るキーコードを変える（⌘ の位置は Windows では Ctrl、Ctrl の位置は Win キー）。
+#   (Mac の割当, Windows の割当, os-morph の名前, 説明)
+OS_MORPHS = [
+    ("&kp LGUI", "&kp LCTRL", "os_cmd", "⌘ → Ctrl（⌘ の位置で Windows のショートカット）"),
+    ("&kp LCTRL", "&kp LGUI", "os_ctrl", "Ctrl → Win キー"),
+    ("&kp LG(Z)", "&kp LC(Z)", "os_undo", "取り消し ⌘Z → Ctrl+Z"),
+    ("&kp LG(X)", "&kp LC(X)", "os_cut", "カット ⌘X → Ctrl+X"),
+    ("&kp LG(C)", "&kp LC(C)", "os_copy", "コピー ⌘C → Ctrl+C"),
+    ("&kp LG(V)", "&kp LC(V)", "os_paste", "ペースト ⌘V → Ctrl+V"),
+    ("&kp LS(LG(Z))", "&kp LC(Y)", "os_redo", "やり直し ⇧⌘Z → Ctrl+Y"),
+    ("&kp LANG2", "&kp INTERNATIONAL_5", "os_eisu", "英数 → 無変換（Windows の IME オフ。MS-IME の設定が要る）"),
+    ("&kp LANG1", "&kp INTERNATIONAL_4", "os_kana", "かな → 変換（Windows の IME オン。MS-IME の設定が要る）"),
+    ("&kp LC(LEFT)", "&kp LC(LG(LEFT))", "os_desk_l", "左の操作スペース ⌃← → 左の仮想デスクトップ Win+Ctrl+←"),
+    ("&kp LC(RIGHT)", "&kp LC(LG(RIGHT))", "os_desk_r", "右の操作スペース ⌃→ → 右の仮想デスクトップ Win+Ctrl+→"),
+    ("&kp LC(UP)", "&kp LG(TAB)", "os_overview", "Mission Control ⌃↑ → タスクビュー Win+Tab"),
+    ("&kp LC(DOWN)", "&kp LG(D)", "os_app_win", "アプリケーションウインドウ ⌃↓ → デスクトップを表示 Win+D"),
+    ("&kp LC(LG(D))", "&mkp MCLK", "os_lookup", "調べる ⌃⌘D → 中クリック（Gen2 標準の Windows 向け割当）"),
+    ("&m0", "&kp LG(LS(S))", "os_shot", "マクロ M0（⌃⇧⌘＋テンキー4）→ 画面の切り取り Win+Shift+S"),
+]
+OS_BY_MAC = {mac: (win, name, note) for mac, win, name, note in OS_MORPHS}
+# レイヤータップ（&lt）のタップ側が OS で変わるものは、タップに os-morph を持つ hold-tap に置き換える
+OS_LT = {"LANG2": "eisu", "LANG1": "kana"}
+
+
+def apply_os(layers):
+    """Mac の割当のうち Windows で変わるものを os-morph に置き換える。使った os-morph の名前を返す。"""
+    used_os, used_lt = set(), set()
+    for b in layers:
+        for p, binding in enumerate(b):
+            if binding in OS_BY_MAC:
+                win, name, _ = OS_BY_MAC[binding]
+                b[p] = "&" + name
+                used_os.add(name)
+                continue
+            parts = binding.split()
+            if parts[0] == "&lt" and parts[2] in OS_LT:
+                key = OS_LT[parts[2]]
+                b[p] = f"&lt_{key} {parts[1]} 0"
+                used_os.add("os_" + key)
+                used_lt.add(key)
+                continue
+            # Mac 専用のキーコードが包まれずに残っていたら止める（OS_MORPHS に足すこと）
+            if any(t in binding for t in ("LG(", "LANG1", "LANG2", "&m0")) or binding.startswith("&ht") and "LANG" in binding:
+                raise SystemExit(f"Windows での扱いが決まっていない割当: {binding}（OS_MORPHS に足すこと）")
+    return used_os, used_lt
+
+
 def main(vil_path, out_path):
     vil = json.load(open(vil_path, encoding="utf-8"))
     layers = vil["layout"]
@@ -309,6 +360,7 @@ def main(vil_path, out_path):
     all_layers.append(SYSTEM + TP_TRANS)
     combos = zmk_combos(vil, all_layers)
     macros = zmk_macros(vil)
+    used_os, used_lt = apply_os(all_layers)
 
     blocks = []
     for (node, disp), b in zip(LAYER_NAMES, all_layers):
@@ -335,10 +387,29 @@ def main(vil_path, out_path):
         f"            bindings = <{c['binding']}>;\n"
         f"            layers = <BASE>;\n"
         f"        }};\n" for c in combos)
+    os_txt = "".join(
+        f"\n        /* {note} */\n"
+        f"        {name}: {name} {{\n"
+        f"            compatible = \"lalapad,behavior-os-morph\";\n"
+        f"            #binding-cells = <0>;\n"
+        f"            bindings = <{mac}>, <{win}>;\n"
+        f"        }};\n" for mac, win, name, note in OS_MORPHS if name in used_os)
+    lt_txt = "".join(
+        f"\n        /* &lt と同じ設定で、タップが os_{key}（Mac={'英数' if key == 'eisu' else 'かな'}／Windows={'無変換' if key == 'eisu' else '変換'}） */\n"
+        f"        lt_{key}: lt_{key} {{\n"
+        f"            compatible = \"zmk,behavior-hold-tap\";\n"
+        f"            #binding-cells = <2>;\n"
+        f"            flavor = \"balanced\";\n"
+        f"            tapping-term-ms = <250>;\n"
+        f"            quick-tap-ms = <250>;\n"
+        f"            require-prior-idle-ms = <120>;\n"
+        f"            bindings = <&mo>, <&os_{key}>;\n"
+        f"        }};\n" for key in sorted(used_lt))
     text = (TEMPLATE.replace("@@LAYERS@@", "\n\n".join(blocks))
-            .replace("@@MACROS@@", macro_txt).replace("@@COMBOS@@", combo_txt))
+            .replace("@@MACROS@@", macro_txt + os_txt + lt_txt).replace("@@COMBOS@@", combo_txt))
     open(out_path, "w", encoding="utf-8").write(text)
-    print(f"wrote {out_path}: {len(all_layers)} layers, {len(combos)} combos, {len(macros)} macros")
+    print(f"wrote {out_path}: {len(all_layers)} layers, {len(combos)} combos, {len(macros)} macros, "
+          f"{len(used_os)} os-morphs, {len(used_lt)} os layer-taps")
     for i, what, why in DROPPED:
         print(f"  置かなかった: L{i} {what}（{why}）")
 
@@ -359,6 +430,9 @@ TEMPLATE = r"""/*
  *   - 5方向スイッチ（L0〜L4）: 左右＝←→／⌘C・⌘V、上下＝輝度／音量（REQ-192・193）、押し込みは .vil どおり
  *   - トラックパッドのジェスチャーは macOS の作法（⌃←/⌃→・Mission Control など）
  *   - コンボ・マクロは .vil の定義どおり（Shift の親指＋? で !、M0）
+ *   - 接続先 OS で変わる割当（REQ-195）: Bluetooth プロファイル 4・5（BT_SEL 3・4）は Windows 用、
+ *     1〜3 と USB は Mac 用。os_* の behavior（src/behaviors/behavior_os_morph.c）が押した瞬間に選ぶ。
+ *     bindings の 1 番目が Mac 用（.vil どおり）、2 番目が Windows 用。System レイヤーに BT 5（BT_SEL 4）を追加
  */
 
 #define ZMK_POINTING_DEFAULT_SCRL_VAL 120   /* smooth scrolling 有効時の推奨値 */

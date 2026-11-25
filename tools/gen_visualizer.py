@@ -91,7 +91,9 @@ def parse_keymap(text):
         body = m.group(2)
         tt = re.search(r"tapping-term-ms\s*=\s*<(\d+)>", body)
         fl = re.search(r"flavor\s*=\s*\"([\w-]+)\"", body)
-        behaviors[m.group(1)] = {"tapping_term": tt and int(tt.group(1)), "flavor": fl and fl.group(1)}
+        bd = re.search(r"bindings\s*=\s*<&(\w+)>\s*,\s*<&(\w+)>", body)
+        behaviors[m.group(1)] = {"tapping_term": tt and int(tt.group(1)), "flavor": fl and fl.group(1),
+                                 "hold": bd and bd.group(1), "tap": bd and bd.group(2)}
 
     # マクロ（&macro_press 修飾キー → &macro_tap キー → &macro_release）。表示用に「⌃⇧⌘＋キー」の形にする
     macros = {}
@@ -105,7 +107,27 @@ def parse_keymap(text):
             (held if kind == "press" else taps if kind == "tap" else []).extend(ks)
         label = "".join(sym.get(k, k) for k in held) + "＋".join(t.replace("KP_N", "テンキー") for t in taps)
         macros[m.group(1)] = {"label": label, "detail": label + "（" + " → ".join(steps) + "）"}
-    return layers, combos, conds, behaviors, macros
+    # 接続先 OS で割当を切り替える behavior（REQ-195）: bindings = <Mac 用>, <Windows 用>
+    os_morphs = {}
+    for m in re.finditer(r"(\w+):\s*\w+\s*\{\s*compatible\s*=\s*\"lalapad,behavior-os-morph\";(.*?)\};", s, flags=re.S):
+        b = re.search(r"bindings\s*=\s*<(.*?)>\s*,\s*<(.*?)>;", m.group(2), flags=re.S)
+        os_morphs[m.group(1)] = {"mac": "&" + " ".join(b.group(1).strip().lstrip("&").split()),
+                                 "win": "&" + " ".join(b.group(2).strip().lstrip("&").split())}
+    return layers, combos, conds, behaviors, macros, os_morphs
+
+
+def expand_os(binding, os_name, behaviors, os_morphs):
+    """os-morph と、タップが os-morph の hold-tap を、指定した OS の割当に展開する。"""
+    p = binding.split()
+    beh = p[0][1:]
+    if beh in os_morphs:
+        return os_morphs[beh][os_name]
+    ht = behaviors.get(beh)
+    if ht and ht.get("tap") in os_morphs and ht.get("hold") == "mo":
+        tap = os_morphs[ht["tap"]][os_name].split()
+        assert tap[0] == "&kp", tap
+        return f"&lt {p[1]} {tap[1]}"
+    return binding
 
 
 def parse_physical():
@@ -188,6 +210,19 @@ def build_geometry():
     }
 
 
+def win_profiles():
+    """Windows として扱う Bluetooth プロファイル（1 始まり）。Kconfig の既定値か、shield の .conf の設定値。"""
+    mask = None
+    for f in (ROOT / "config" / "boards" / "shields" / "lalapadgen2").glob("*.conf"):
+        m = re.search(r"CONFIG_ZMK_BEHAVIOR_OS_MORPH_WIN_PROFILES\s*=\s*(\w+)", f.read_text(encoding="utf-8"))
+        if m:
+            mask = int(m.group(1), 0)
+    if mask is None:
+        m = re.search(r"WIN_PROFILES.*?default\s+(0x[0-9a-fA-F]+|\d+)", (ROOT / "Kconfig").read_text(encoding="utf-8"), flags=re.S)
+        mask = int(m.group(1), 0)
+    return [i + 1 for i in range(32) if mask >> i & 1]
+
+
 def git_info():
     try:
         commit = subprocess.check_output(["git", "-C", str(ROOT), "log", "-1", "--format=%h", "--", "config/lalapadgen2.keymap"], text=True).strip()
@@ -204,7 +239,11 @@ def main():
     args = ap.parse_args()
 
     text = KEYMAP.read_text(encoding="utf-8")
-    layers, combos, conds, behaviors, macros = parse_keymap(text)
+    layers, combos, conds, behaviors, macros, os_morphs = parse_keymap(text)
+    raw = [dict(L, bindings=list(L["bindings"])) for L in layers]
+    layers_win = [dict(L, bindings=[expand_os(b, "win", behaviors, os_morphs) for b in L["bindings"]]) for L in raw]
+    for L in layers:
+        L["bindings"] = [expand_os(b, "mac", behaviors, os_morphs) for b in L["bindings"]]
     phys = parse_physical()
     for L in layers:
         if len(L["bindings"]) != len(phys):
@@ -216,6 +255,9 @@ def main():
         "conditional": conds,
         "behaviors": behaviors,
         "macros": macros,
+        "layers_win": layers_win,
+        "os_morphs": os_morphs,
+        "win_profiles": win_profiles(),
         "physical": phys,
         "geometry": build_geometry(),
         "trackpad": parse_trackpad_positions(),
