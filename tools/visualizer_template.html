@@ -74,7 +74,12 @@
   .combo { position: absolute; transform: translate(-50%, -50%); z-index: 3; background: #1d2430; color: #fff;
            font-size: 10px; font-weight: 700; border-radius: 999px; padding: 2px 7px; white-space: nowrap;
            box-shadow: 0 2px 6px rgba(0,0,0,.2); }
-  .areaLabel { position: absolute; font-size: 11px; color: var(--muted); }
+  .areaLabel { position: absolute; font-size: 11px; color: var(--muted); transform: translateX(-50%); white-space: nowrap; }
+  .pad { position: absolute; border-radius: 12px; background: #2a313c; color: #c9d2de; display: grid; place-items: center;
+         font-size: 12px; text-align: center; line-height: 1.4; box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); }
+  .knob { position: absolute; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: #1d2430;
+          box-shadow: 0 0 0 3px rgba(29,36,48,.15); }
+  .leader { position: absolute; border-left: 1px dashed #9aa4b2; }
   .legend { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 14px; color: var(--muted); font-size: 12px; }
   .legend span { display: inline-flex; align-items: center; gap: 6px; }
   .sw { width: 18px; height: 12px; border-radius: 3px; border: 1px solid; display: inline-block; }
@@ -93,7 +98,7 @@
   <header>
     <div>
       <h1>LaLapad Gen2 大西配列キーマップ</h1>
-      <div class="subtitle">config/lalapadgen2.keymap から生成。文字は Mac の JIS 入力として表示（小さい字は ZMK のキー名）。</div>
+      <div class="subtitle">config/lalapadgen2.keymap から生成。実機のカラムスタッガード（列ごとの縦ずれ）で表示。文字は Mac の JIS 入力として表示（小さい字は ZMK のキー名）。</div>
     </div>
     <div class="meta" id="meta"></div>
   </header>
@@ -110,17 +115,17 @@
     <div class="box">
       <h2>同時押し（コンボ）</h2>
       <table id="comboTable"></table>
-      <p class="note">Cornix の外側の列（Gen2 にない列）は小指の縦2キー同時押しに置いた。</p>
+      <p class="note">大西配列.vil に同時押しの定義はないので、同時押しは置いていない。Cornix の外側の列（Esc・Tab・戻る・Delete）は 5方向スイッチの左右に置いた。</p>
     </div>
     <div class="box">
       <h2>トラックパッドの操作</h2>
       <table id="tpTable"></table>
-      <p class="note">Gen2 標準ファームウェアの割当のまま。薄い字は下のレイヤーから引き継いだ割当。</p>
+      <p class="note">macOS のトラックパッドの作法に合わせた割当。1本指で移動、2本指でスクロール（慣性あり）、カーソルの慣性はなし。薄い字は下のレイヤーから引き継いだ割当。</p>
     </div>
     <div class="box">
       <h2>5方向スイッチ</h2>
       <table id="fiveTable"></table>
-      <p class="note">Cornix のエンコーダー（左＝輝度、右＝音量）を上下に、押し込みをエンコーダーの押下キーに置いた。左右は空き。</p>
+      <p class="note">上下＝Cornix のエンコーダー（左＝輝度、右＝音量）、押し込み＝エンコーダーの押下キー。左右＝Cornix の外側の列（外側へ倒すと上段のキー、内側へ倒すと中段のキー）。</p>
     </div>
   </section>
 </main>
@@ -150,7 +155,13 @@ const ZDS = { "ZDS_XY ZDS_INC": "ポインタ速度+", "ZDS_XY ZDS_DEC": "ポイ
               "ZDS_SC ZDS_DEC": "スクロール速度−", "ZDS_ALL ZDS_RST": "速度を初期値に" };
 const MODSYM = { LC: "⌃", LA: "⌥", LG: "⌘", LS: "⇧", RC: "⌃", RA: "⌥", RG: "⌘", RS: "⇧" };
 
+const MAC_SHORTCUTS = {
+  "LC(LEFT)": ["左の操作スペースへ（⌃←）", "system"], "LC(RIGHT)": ["右の操作スペースへ（⌃→）", "system"],
+  "LC(UP)": ["Mission Control（⌃↑）", "system"], "LC(DOWN)": ["アプリケーションウインドウ（⌃↓）", "system"],
+  "LC(LG(D))": ["調べる（⌃⌘D）", "system"],
+};
 function keyLabel(code) {
+  if (MAC_SHORTCUTS[code]) return MAC_SHORTCUTS[code];
   if (code === "LS(SLASH)" || code === "RS(SLASH)") return ["?", "punct"];   // JIS でも US でも ?
   const m = code.match(/^(L[CAGS]|R[CAGS])\((.*)\)$/);
   if (m) { const inner = keyLabel(m[2]); return [MODSYM[m[1]] + inner[0], inner[1] === "letter" ? "edit" : inner[1]]; }
@@ -238,12 +249,31 @@ function render() {
 
   const board = document.getElementById("board");
   board.innerHTML = "";
-  const keys = DATA.physical.slice(0, 52);
-  const maxX = Math.max(...keys.map(k => k.x + k.w)), maxY = Math.max(...keys.map(k => k.y + k.h));
+  const GEO = DATA.geometry, keys = GEO.keys;
+  const maxX = GEO.width, maxY = GEO.height;
   U = Math.max(0.3, Math.min(0.8, (board.parentElement.clientWidth - 64) / maxX));
   board.classList.toggle("compact", U < 0.62);
   board.style.width = (maxX * U) + "px";
-  board.style.height = (maxY * U + 28) + "px";
+  board.style.height = (maxY * U) + "px";
+
+  GEO.pads.forEach(p => {
+    const e = document.createElement("div");
+    e.className = "pad";
+    Object.assign(e.style, { left: p.x * U + "px", top: p.y * U + "px", width: p.w * U + "px", height: p.h * U + "px" });
+    e.innerHTML = "トラックパッド<br>（" + (p.side === "L" ? "左" : "右") + "）";
+    board.appendChild(e);
+  });
+  GEO.knobs.forEach((k, n) => {
+    const line = document.createElement("div");
+    line.className = "leader";
+    Object.assign(line.style, { left: k.cx * U + "px", top: k.cy * U + "px", height: (keys[n ? 47 : 46].y - k.cy) * U + "px" });
+    board.appendChild(line);
+    const e = document.createElement("div");
+    e.className = "knob";
+    Object.assign(e.style, { left: k.cx * U + "px", top: k.cy * U + "px" });
+    e.title = "5方向スイッチの実機の位置";
+    board.appendChild(e);
+  });
 
   keys.forEach((k, pos) => {
     const r = resolve(i, pos);
@@ -252,6 +282,7 @@ function render() {
     el.className = "key " + (d.cls || "none") + (r.from !== i ? " inherit" : "") + (FIVE.has(pos) ? " five" : "") + (CENTER.has(pos) ? " center" : "");
     const gap = FIVE.has(pos) ? 2 : 4;
     Object.assign(el.style, { left: (k.x * U + gap / 2) + "px", top: (k.y * U + gap / 2) + "px", width: (k.w * U - gap) + "px", height: (k.h * U - gap) + "px" });
+    if (k.rot) el.style.transform = `rotate(${k.rot}deg)`;
     const len = (d.tap || "").length;
     const size = FIVE.has(pos) ? "" : len > 6 ? " xs" : len > 3 ? " s" : "";
     el.innerHTML = `<span class="pos">${pos}${d.code ? " · " + d.code : ""}</span><span class="tap${size}">${d.tap || ""}</span><span class="hold">${d.hold || (r.from !== i ? "L" + r.from + " から" : "")}</span>`;
@@ -260,12 +291,13 @@ function render() {
   });
 
   const lab = (text, x, y) => { const e = document.createElement("div"); e.className = "areaLabel"; e.textContent = text; e.style.left = x + "px"; e.style.top = y + "px"; board.appendChild(e); };
-  lab("5方向スイッチ（左）", 320 * U, 555 * U);
-  lab("5方向スイッチ（右）", 770 * U, 555 * U);
+  const lab5 = (n, text) => { const c = keys[n]; lab(text, (c.x + c.w / 2) * U, (c.y + c.h + 4) * U); };
+  lab5(44, "5方向スイッチ（左）拡大");
+  lab5(49, "5方向スイッチ（右）拡大");
 
   const active = DATA.combos.filter(c => !c.layers || c.layers.includes(i));
   active.forEach(c => {
-    const [a, b] = c.positions.map(p => DATA.physical[p]);
+    const [a, b] = c.positions.map(p => keys[p]);
     const e = document.createElement("div");
     e.className = "combo";
     e.textContent = describe(c.binding).tap;
@@ -275,7 +307,7 @@ function render() {
   });
 
   const ct = document.getElementById("comboTable");
-  ct.innerHTML = "<tr><th>キー</th><th>出力</th><th>使えるレイヤー</th></tr>" + DATA.combos.map(c => {
+  ct.innerHTML = DATA.combos.length === 0 ? "<tr><td>なし</td></tr>" : "<tr><th>キー</th><th>出力</th><th>使えるレイヤー</th></tr>" + DATA.combos.map(c => {
     const keysTxt = c.positions.map(p => { const d = describe(resolve(0, p).b); return (d.tap || "?") + "(" + p + ")"; }).join(" + ");
     const on = !c.layers || c.layers.includes(i);
     return `<tr${on ? "" : ' style="opacity:.4"'}><td>${keysTxt}</td><td>${describe(c.binding).tap}</td><td>${c.layers ? c.layers.map(n => "L" + n).join(" ") : "全レイヤー"}</td></tr>`;
@@ -287,7 +319,9 @@ function render() {
   ft.innerHTML = "<tr><th>方向</th><th>左手</th><th>右手</th></tr>" + dirs.map(([n, l, r]) => `<tr><td>${n}</td>${cell(l)}${cell(r)}</tr>`).join("");
 
   const tp = document.getElementById("tpTable");
-  const G = { LCLK: "タップ（左クリック相当）", RCLK: "タップ（右クリック相当）", MCLK: "タップ（中クリック相当）", LEFT: "ジェスチャー ←", RIGHT: "ジェスチャー →", UP: "ジェスチャー ↑", DOWN: "ジェスチャー ↓", PINCH: "ピンチ" };
+  // 仮想キーの名前（shield の POS_TP_*）と実際の操作。スワイプの向きは zmk-driver-iqs9151 の実装による
+  const G = { LCLK: "1本指でタップ", RCLK: "2本指でタップ", MCLK: "3本指でタップ", LEFT: "3本指で右へスワイプ", RIGHT: "3本指で左へスワイプ",
+              UP: "3本指で上へスワイプ", DOWN: "3本指で下へスワイプ", PINCH: "2本指でピンチ（拡大・縮小）中に押す修飾キー" };
   const rows = Object.entries(DATA.trackpad).sort((a, b) => a[1].side.localeCompare(b[1].side) || +a[0] - +b[0]);
   tp.innerHTML = "<tr><th>パッド</th><th>操作</th><th>割当</th></tr>" + rows.map(([pos, t]) => {
     const r = resolve(i, +pos);
@@ -311,7 +345,8 @@ function init() {
                   ["mouse", "マウス"], ["media", "音量・輝度など"], ["mod", "修飾キー"], ["layer", "レイヤー切替"], ["system", "システム"]];
   document.getElementById("legend").innerHTML = legend.map(([c, t]) =>
     `<span><i class="sw" style="background:var(--${c});border-color:var(--${c}-b)"></i>${t}</span>`).join("") +
-    `<span><i class="sw" style="background:#1d2430;border-color:#1d2430"></i>同時押し</span><span>点線＝下のレイヤーから引き継ぎ</span>`;
+    (DATA.combos.length ? `<span><i class="sw" style="background:#1d2430;border-color:#1d2430"></i>同時押し</span>` : "") +
+    `<span>点線のキー＝下のレイヤーから引き継ぎ</span><span>● と点線＝5方向スイッチの実機の位置</span><span>配置は製品写真から読み取った推定（±0.1キー程度）</span>`;
   document.addEventListener("keydown", e => {
     if (e.key === "ArrowRight") { current = (current + 1) % DATA.layers.length; render(); }
     if (e.key === "ArrowLeft") { current = (current + DATA.layers.length - 1) % DATA.layers.length; render(); }

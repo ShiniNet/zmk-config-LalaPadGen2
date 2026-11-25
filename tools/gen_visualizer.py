@@ -112,6 +112,69 @@ def parse_trackpad_positions():
     return pos
 
 
+# ---- 表示用の形状（REQ-192）---------------------------------------------------------------
+# ZMK の物理配置（lalapadgen2-layouts.dtsi）は格子状なので、表示にはこちらを使う。
+# LaLaPad Gen2 は列ごとに縦にずれたカラムスタッガード。値は ShiniNet/LaLaPadGen2 の製品写真
+# （docs/images/product_1：真上から撮った左右）から、キーのピッチを 1u として読み取った推定値（±0.1u 程度）。
+#   中指・人差し指・内側の列はほぼ同じ高さ、薬指が約 0.3u、小指が約 0.65u 下がる。
+#   親指側は、人差し指列の下に小さいキー（位置 33/38）、その内側に大きい親指キー 2 つ（34・35/37・36）。
+#   5方向スイッチは中指列と人差し指列の下段の間。トラックパッドは内側の列の外（手の中央側）上部。
+# 単位は 1u = 100。左手の座標を決め、右手は左右反転で作る。
+STAGGER = [65, 30, 0, 0, 0]          # 列 0=小指, 1=薬指, 2=中指, 3=人差し指, 4=内側
+HALF_W = 800                          # 片手の幅
+GAP = 120                             # 左右の間
+FIVE_DISPLAY_DY = 155                 # 5方向スイッチの拡大図を実機の位置からどれだけ下に描くか
+FIVE_STEP = 58                        # 拡大図の上下左右ボタンの中心間隔
+FIVE_SIZE = 54
+
+
+def _left_geometry():
+    g = {}
+    for r in range(3):
+        for c in range(5):
+            g[r * 10 + c] = {"x": c * 100, "y": r * 100 + STAGGER[c], "w": 100, "h": 100, "rot": 0}
+    g[30] = {"x": 0, "y": 300 + STAGGER[0], "w": 100, "h": 100, "rot": 0}
+    g[31] = {"x": 100, "y": 300 + STAGGER[1], "w": 100, "h": 100, "rot": 0}
+    g[32] = {"x": 200, "y": 300 + STAGGER[2], "w": 100, "h": 100, "rot": 0}
+    g[33] = {"x": 360, "y": 315, "w": 100, "h": 100, "rot": 0}          # 人差し指列の下段（内側・やや下）
+    g[34] = {"x": 500, "y": 270, "w": 100, "h": 150, "rot": 12}         # 大きい親指キー（外側）
+    g[35] = {"x": 620, "y": 300, "w": 100, "h": 150, "rot": 24}         # 大きい親指キー（内側）
+    return g
+
+
+def _mirror(k):
+    return {"x": 2 * HALF_W + GAP - k["x"] - k["w"], "y": k["y"], "w": k["w"], "h": k["h"], "rot": -k["rot"]}
+
+
+def build_geometry():
+    left = _left_geometry()
+    keys = {}
+    for p, k in left.items():
+        keys[p] = k
+        if p < 30:
+            r, c = divmod(p, 10)
+            keys[r * 10 + 5 + (4 - c)] = _mirror(k)
+        else:
+            keys[71 - p] = _mirror(k)                     # 30↔41, 31↔40, … 35↔36
+    knob_l = {"cx": 322, "cy": 360}                       # 実機の 5方向スイッチの位置
+    knob_r = {"cx": 2 * HALF_W + GAP - knob_l["cx"], "cy": knob_l["cy"]}
+    # 拡大図: 左 42=押下 43=右 44=下 45=左 46=上 / 右 51=押下 50=右 49=下 48=左 47=上
+    for knob, (center, right, down, left_, up) in ((knob_l, (42, 43, 44, 45, 46)), (knob_r, (51, 50, 49, 48, 47))):
+        cx, cy = knob["cx"], knob["cy"] + FIVE_DISPLAY_DY
+        for p, (dx, dy) in ((center, (0, 0)), (right, (1, 0)), (down, (0, 1)), (left_, (-1, 0)), (up, (0, -1))):
+            keys[p] = {"x": cx + dx * FIVE_STEP - FIVE_SIZE / 2, "y": cy + dy * FIVE_STEP - FIVE_SIZE / 2,
+                       "w": FIVE_SIZE, "h": FIVE_SIZE, "rot": 0}
+    pad_l = {"x": 515, "y": -10, "w": 280, "h": 260}
+    pad_r = {"x": 2 * HALF_W + GAP - pad_l["x"] - pad_l["w"], "y": pad_l["y"], "w": pad_l["w"], "h": pad_l["h"]}
+    return {
+        "keys": [keys[p] for p in range(52)],
+        "pads": [dict(pad_l, side="L"), dict(pad_r, side="R")],
+        "knobs": [knob_l, knob_r],
+        "width": 2 * HALF_W + GAP,
+        "height": knob_l["cy"] + FIVE_DISPLAY_DY + FIVE_STEP + FIVE_SIZE / 2 + 30,
+    }
+
+
 def git_info():
     try:
         commit = subprocess.check_output(["git", "-C", str(ROOT), "log", "-1", "--format=%h", "--", "config/lalapadgen2.keymap"], text=True).strip()
@@ -140,6 +203,7 @@ def main():
         "conditional": conds,
         "behaviors": behaviors,
         "physical": phys,
+        "geometry": build_geometry(),
         "trackpad": parse_trackpad_positions(),
         "meta": {
             "keymap_sha256": hashlib.sha256(text.encode("utf-8")).hexdigest()[:12],

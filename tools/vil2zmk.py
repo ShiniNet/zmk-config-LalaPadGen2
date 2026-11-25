@@ -12,9 +12,11 @@
     右手  行 r=4..6, 列 c=5..1（鏡像）    → pos (r-4)*10 + 5 + (5-c)
     親指  左 行3 列0..5                  → pos 30..35
           右 行7 列5..0                  → pos 36..41
-    外側の列（ESC/TAB/戻る/DEL など）    → 小指の縦コンボ（combos）
-    列6（エンコーダー押下）と回転         → 5方向スイッチ（左=エンコーダー0、右=エンコーダー1）
-    トラックパッドの仮想キー（52..67）    → Gen2 標準ファームウェアのまま
+    外側の列 上段・中段（ESC/TAB/戻る/DEL）→ 5方向スイッチの左右（外側＝上段、内側＝中段）
+    列6（エンコーダー押下）と回転         → 5方向スイッチの押し込みと上下（左=エンコーダー0、右=エンコーダー1）
+    トラックパッドの仮想キー（52..67）    → macOS のトラックパッドの作法に合わせた割当（REQ-192）
+
+.vil に定義のない同時押し（コンボ）は作らない（REQ-192）。
 """
 import json
 import sys
@@ -75,8 +77,8 @@ def conv(code, pos=None):
         return f"&kp {SIMPLE[code]}"
     if code in MOUSE:
         return MOUSE[code]
-    if code in UNSUPPORTED:
-        return "&none"
+    if code in UNSUPPORTED or str(code).startswith("USER"):
+        return "&none"   # USER00〜02 は Cornix 固有のキー（中身不明）
     if code.startswith("LT") and "(" in code:  # LT3(KC_LANG2)
         layer = int(code[2:code.index("(")])
         inner = code[code.index("(") + 1:-1]
@@ -114,19 +116,36 @@ def gen2_layer(vil_layer, enc, idx):
     b[47] = conv(r_cw)
     b[49] = conv(r_ccw)
     b[51] = conv(vil_layer[5][6])   # 右の列6（エンコーダー押下）
-    # 回転に当たらない左右方向は空き
-    for p in (43, 45, 48, 50):
-        b[p] = "&none"
+    # Cornix の外側の列（Gen2 にない列）は 5方向スイッチの左右に置く。
+    #   左手: 外側の列の上段 → 左スイッチの「左」(45)、中段 → 左スイッチの「右」(43)
+    #   右手: 外側の列の上段 → 右スイッチの「右」(50)、中段 → 右スイッチの「左」(48)
+    #   （どちらの手も、外側へ倒すと上段、内側へ倒すと中段。下段は .vil で全レイヤー KC_NO）
+    b[45] = conv(vil_layer[0][0])
+    b[43] = conv(vil_layer[1][0])
+    b[50] = conv(vil_layer[4][0])
+    b[48] = conv(vil_layer[5][0])
     return b
 
 
-# Gen2 標準ファームウェア（ShiniNet/zmk-config-LalaPadGen2 ea4909a）のトラックパッド仮想キー
-# 52..57 = タップ（左 1/2/3 本指, 右 1/2/3 本指）, 58..67 = スワイプ（左 ←→↑↓ピンチ, 右 ←→↑↓ピンチ）
-TP_BASE = ["&mkp LCLK", "&mkp RCLK", "&mkp MCLK", "&mkp LCLK", "&mkp RCLK", "&mkp MCLK",
-           "&mkp MB4", "&mkp MB5", "&kp LG(TAB)", "&kp LG(D)", "&kp LCTRL",
-           "&mkp MB4", "&mkp MB5", "&kp LG(TAB)", "&kp LG(D)", "&kp LCTRL"]
-TP_L1 = ["&trans"] * 6 + ["&kp LC(LG(LEFT))", "&kp LC(LG(RIGHT))", "&trans", "&trans", "&trans",
-                          "&kp LC(LG(LEFT))", "&kp LC(LG(RIGHT))", "&trans", "&trans", "&trans"]
+# トラックパッドの仮想キー（Gen2 の shield 定義 POS_TP_*）。macOS のトラックパッドの作法に合わせる（REQ-192）。
+#   52..54 / 55..57 = 左/右パッドの 1本指タップ(MB1)・2本指タップ(MB2)・3本指タップ(MB3)
+#   58..62 / 63..67 = 左/右パッドの 3本指スワイプ 右(MB4)・左(MB5)・上(MB6)・下(MB7)、ピンチ中の修飾キー(ZMOD)
+#   スワイプの向きは zmk-driver-iqs9151 v1.0.0 の実装（dx>0→BTN_3=MB4、dx<0→BTN_4=MB5、
+#   dy<0→BTN_5=MB6、dy>0→BTN_6=MB7）と LaLaPad Gen2 の HowtoUse の既定割当表による。
+#   Gen2 標準（Windows 向け）: MB3=中クリック、MB4/5=戻る/進む、MB6=Win+Tab、MB7=Win+D、ZMOD=Ctrl
+TP_MAC_ONE_PAD = [
+    "&mkp LCLK",          # 1本指タップ = クリック（Mac の「タップでクリック」）
+    "&mkp RCLK",          # 2本指タップ = 副ボタンのクリック
+    "&kp LC(LG(D))",      # 3本指タップ = 調べる＆データ検出（Mac の「3本指でタップ」設定と同じ ⌃⌘D）
+]
+TP_MAC_SWIPE = [
+    "&kp LC(LEFT)",       # 3本指スワイプ右 = 左の操作スペースへ（Mac: 3本指で右へスワイプ）
+    "&kp LC(RIGHT)",      # 3本指スワイプ左 = 右の操作スペースへ
+    "&kp LC(UP)",         # 3本指スワイプ上 = Mission Control
+    "&kp LC(DOWN)",       # 3本指スワイプ下 = アプリケーションウインドウ（App Exposé）
+    "&kp LGUI",           # ピンチ中の修飾キー = ⌘（Gen2 作者が Mac 向けに挙げている設定）
+]
+TP_BASE = TP_MAC_ONE_PAD * 2 + TP_MAC_SWIPE * 2
 TP_TRANS = ["&trans"] * 16
 
 # Gen2 標準の System レイヤー（位置 0..51）。ここでは layer 10 に置き、Num+Nav 同時押しで出す。
@@ -178,7 +197,7 @@ def main(vil_path, out_path):
     all_layers = []
     for i, vl in enumerate(layers):
         b = gen2_layer(vl, enc, i)
-        tp = TP_BASE if i == 0 else TP_L1 if i == 1 else TP_TRANS
+        tp = TP_BASE if i == 0 else TP_TRANS
         all_layers.append(b + tp)
     all_layers.append(SYSTEM + TP_TRANS)
 
@@ -198,7 +217,7 @@ def main(vil_path, out_path):
 
 
 TEMPLATE = r"""/*
- * LaLapad Gen2 キーマップ — Cornix 大西配列.vil（10レイヤー）から起こしたもの（REQ-189）
+ * LaLapad Gen2 キーマップ — Cornix 大西配列.vil（10レイヤー）から起こしたもの（REQ-189、REQ-192 で修正）
  *
  * 正本はこのファイル。tools/vil2zmk.py は最初の変換に使ったもの（再実行すると上書きされる）。
  * 直したら `python3 tools/gen_visualizer.py` でビジュアライザーを作り直す。
@@ -206,6 +225,9 @@ TEMPLATE = r"""/*
  * レイヤー: 0 Base(大西) / 1 Num / 2 Nav / 3 Fn / 4 Mouse / 5-9 空き（.vilどおり）/ 10 System
  *   - 1 と 2 を同時に押すと 10 System（Gen2 標準の Num+Nav→System と同じ仕組み）
  *   - トラックパッドの低速モードは shield 側で layer 1・2 に掛かる（Gen2 標準のまま）
+ *   - Cornix の外側の列（Esc・Tab・戻る・Delete）は 5方向スイッチの左右
+ *   - トラックパッドのジェスチャーは macOS の作法（⌃←/⌃→・Mission Control など）
+ *   - .vil に定義のない同時押し（コンボ）は置かない
  */
 
 #define ZMK_POINTING_DEFAULT_SCRL_VAL 120   /* smooth scrolling 有効時の推奨値 */
@@ -275,47 +297,6 @@ TEMPLATE = r"""/*
             hold-trigger-key-positions = <KEYS_L THUMBS>;
             hold-trigger-on-release;
             bindings = <&kp>, <&kp>;
-        };
-    };
-
-    /* Cornix の外側の列（Gen2 にない列）は、小指の縦2キー同時押しに置く。
-     * 上段+中段 = 外側の列の上段、中段+下段 = 外側の列の中段（.vil の位置どおり）。 */
-    combos {
-        compatible = "zmk,combos";
-
-        combo_esc {
-            bindings = <&kp ESC>;
-            key-positions = <0 10>;
-            timeout-ms = <50>;
-            layers = <BASE NUM NAV MOUSE>;
-        };
-
-        combo_tab {
-            bindings = <&kp TAB>;
-            key-positions = <10 20>;
-            timeout-ms = <50>;
-            layers = <BASE NUM NAV MOUSE>;
-        };
-
-        combo_back {
-            bindings = <&kp C_AC_BACK>;
-            key-positions = <9 19>;
-            timeout-ms = <50>;
-            layers = <BASE NUM NAV FUNC>;
-        };
-
-        combo_rshift_mouse {
-            bindings = <&kp RSHIFT>;
-            key-positions = <9 19>;
-            timeout-ms = <50>;
-            layers = <MOUSE>;
-        };
-
-        combo_del {
-            bindings = <&kp DEL>;
-            key-positions = <19 29>;
-            timeout-ms = <50>;
-            layers = <BASE NUM NAV FUNC MOUSE>;
         };
     };
 
