@@ -1,5 +1,5 @@
 /*
- * LaLapad Gen2 キーマップ — Cornix 大西配列.vil（10レイヤー）から起こしたもの（REQ-189、REQ-192 で修正）
+ * LaLapad Gen2 キーマップ — Cornix 大西配列.vil（10レイヤー）から起こしたもの（REQ-189、REQ-192・REQ-193 で修正）
  *
  * 正本はこのファイル。tools/vil2zmk.py は最初の変換に使ったもの（再実行すると上書きされる）。
  * 直したら `python3 tools/gen_visualizer.py` でビジュアライザーを作り直す。
@@ -7,7 +7,9 @@
  * レイヤー: 0 Base(大西) / 1 Num / 2 Nav / 3 Fn / 4 Mouse / 5-9 空き（.vilどおり）/ 10 System
  *   - 1 と 2 を同時に押すと 10 System（Gen2 標準の Num+Nav→System と同じ仕組み）
  *   - トラックパッドの低速モードは shield 側で layer 1・2 に掛かる（Gen2 標準のまま）
- *   - Cornix の外側の列（Esc・Tab・戻る・Delete）は 5方向スイッチの左右
+ *   - 左下段は ⌘・Opt・Ctrl。右下段に修飾キーは置かず、Delete・戻る・Esc（REQ-193）
+ *   - 右親指の Shift はタップで Tab（REQ-193）
+ *   - 5方向スイッチの左右: 左手＝←→、右手＝⌘C・⌘V（REQ-193）
  *   - トラックパッドのジェスチャーは macOS の作法（⌃←/⌃→・Mission Control など）
  *   - .vil に定義のない同時押し（コンボ）は置かない
  */
@@ -91,8 +93,8 @@
 &kp Q               &kp L               &kp U               &kp COMMA           &kp DOT                                                   &kp F               &kp W               &kp R               &kp Y               &kp P
 &kp E               &kp I               &kp A               &kp O               &kp MINUS                                                 &kp K               &kp T               &kp N               &kp S               &kp H
 &kp J               &kp X               &kp C               &kp V               &kp LS(SLASH)                                             &kp G               &kp D               &kp M               &kp Z               &kp B
-&kp LCTRL           &kp LALT            &kp LGUI            &lt 3 LANG2         &ht_l LSHIFT SPACE  &lt 1 ENTER         &lt 2 BSPC          &kp RSHIFT          &lt 4 LANG1         &kp RGUI            &kp RALT            &kp RCTRL
-                    &kp C_SLEEP         &kp TAB             &kp C_BRI_DN        &kp ESC             &kp C_BRI_UP        &kp C_VOL_UP        &kp DEL             &kp C_VOL_DN        &kp C_AC_BACK       &kp C_MUTE
+&kp LGUI            &kp LALT            &kp LCTRL           &lt 3 LANG2         &ht_l LSHIFT SPACE  &lt 1 ENTER         &lt 2 BSPC          &ht_r RSHIFT TAB    &lt 4 LANG1         &kp DEL             &kp C_AC_BACK       &kp ESC
+                    &kp C_SLEEP         &kp RIGHT           &kp C_BRI_DN        &kp LEFT            &kp C_BRI_UP        &kp C_VOL_UP        &kp LG(C)           &kp C_VOL_DN        &kp LG(V)           &kp C_MUTE
 &mkp LCLK           &mkp RCLK           &kp LC(LG(D))                                                                                                                                                                 &mkp LCLK           &mkp RCLK           &kp LC(LG(D))
 &kp LC(LEFT)        &kp LC(RIGHT)       &kp LC(UP)          &kp LC(DOWN)        &kp LGUI                                                  &kp LC(LEFT)        &kp LC(RIGHT)       &kp LC(UP)          &kp LC(DOWN)        &kp LGUI
             >;
@@ -101,11 +103,11 @@
         num_layer {
             display-name = "Num";
             bindings = <
-&kp RBKT            &kp NON_US_HASH     &kp N7              &kp N8              &kp N9                                                    &kp KP_N7           &kp KP_N8           &kp KP_N9           &kp KP_PLUS         &kp KP_MINUS
-&kp SEMI            &kp SQT             &kp N4              &kp N5              &kp N6                                                    &kp KP_N4           &kp KP_N5           &kp KP_N6           &kp KP_MULTIPLY     &kp KP_DIVIDE
-&kp LBKT            &kp N0              &kp N1              &kp N2              &kp N3                                                    &kp KP_N1           &kp KP_N2           &kp KP_N3           &kp KP_N0           &kp KP_DOT
-&kp LCTRL           &kp LALT            &kp LGUI            &kp LANG2           &ht_l LSHIFT SPACE  &lt 1 ENTER         &lt 2 BSPC          &ht_r RSHIFT SPACE  &kp LANG1           &kp SQT             &kp SLASH           &kp RCTRL
-                    &kp C_SLEEP         &kp TAB             &kp C_BRI_DN        &kp ESC             &kp C_BRI_UP        &kp C_VOL_UP        &kp DEL             &kp C_VOL_DN        &kp C_AC_BACK       &kp C_MUTE
+&kp RBKT            &kp NON_US_HASH     &kp N7              &kp N8              &kp N9                                                    &kp KP_PLUS         &kp KP_N7           &kp KP_N8           &kp KP_N9           &kp KP_MINUS
+&kp SEMI            &kp SQT             &kp N4              &kp N5              &kp N6                                                    &kp SQT             &kp KP_N4           &kp KP_N5           &kp KP_N6           &kp KP_DIVIDE
+&kp LBKT            &kp N0              &kp N1              &kp N2              &kp N3                                                    &kp KP_N0           &kp KP_N1           &kp KP_N2           &kp KP_N3           &kp KP_DOT
+&kp LGUI            &kp LALT            &kp LCTRL           &kp LANG2           &ht_l LSHIFT SPACE  &lt 1 ENTER         &lt 2 BSPC          &ht_r RSHIFT SPACE  &kp LANG1           &kp SQT             &kp SLASH           &kp ESC
+                    &kp C_SLEEP         &kp RIGHT           &kp C_BRI_DN        &kp LEFT            &kp C_BRI_UP        &kp C_VOL_UP        &kp LG(C)           &kp C_VOL_DN        &kp LG(V)           &kp C_MUTE
 &trans              &trans              &trans                                                                                                                                                                        &trans              &trans              &trans
 &trans              &trans              &trans              &trans              &trans                                                    &trans              &trans              &trans              &trans              &trans
             >;
@@ -117,8 +119,8 @@
 &kp HOME            &kp PG_UP           &kp UP              &kp PG_DN           &kp END                                                   &kp HOME            &kp PG_UP           &kp UP              &kp PG_DN           &kp END
 &none               &kp LEFT            &kp DOWN            &kp RIGHT           &none                                                     &none               &kp LEFT            &kp DOWN            &kp RIGHT           &none
 &kp K_UNDO          &kp K_CUT           &kp K_COPY          &kp K_PASTE         &kp K_AGAIN                                               &kp K_UNDO          &kp K_CUT           &kp K_COPY          &kp K_PASTE         &kp K_AGAIN
-&kp LCTRL           &kp LALT            &kp LGUI            &kp LANG2           &ht_l LSHIFT SPACE  &lt 1 ENTER         &lt 2 BSPC          &ht_r RSHIFT SPACE  &kp LANG1           &kp RGUI            &kp RALT            &kp RCTRL
-                    &kp C_SLEEP         &kp TAB             &kp C_BRI_DN        &kp ESC             &kp C_BRI_UP        &kp C_VOL_UP        &kp DEL             &kp C_VOL_DN        &kp C_AC_BACK       &kp C_MUTE
+&kp LGUI            &kp LALT            &kp LCTRL           &kp LANG2           &ht_l LSHIFT SPACE  &lt 1 ENTER         &lt 2 BSPC          &ht_r RSHIFT SPACE  &kp LANG1           &kp DEL             &kp C_AC_BACK       &kp ESC
+                    &kp C_SLEEP         &kp RIGHT           &kp C_BRI_DN        &kp LEFT            &kp C_BRI_UP        &kp C_VOL_UP        &kp LG(C)           &kp C_VOL_DN        &kp LG(V)           &kp C_MUTE
 &trans              &trans              &trans                                                                                                                                                                        &trans              &trans              &trans
 &trans              &trans              &trans              &trans              &trans                                                    &trans              &trans              &trans              &trans              &trans
             >;
@@ -130,8 +132,8 @@
 &kp F1              &kp F2              &kp F3              &kp F4              &kp F5                                                    &kp F1              &kp F2              &kp F3              &kp F4              &kp F5
 &kp F6              &kp F7              &kp F8              &kp F9              &kp F10                                                   &kp F6              &kp F7              &kp F8              &kp F9              &kp F10
 &kp F11             &kp F12             &none               &none               &none                                                     &kp F11             &kp F12             &none               &none               &none
-&kp LCTRL           &kp LALT            &kp LGUI            &kp LANG2           &ht_l LSHIFT K_APP  &lt 1 ENTER         &lt 2 BSPC          &ht_r RSHIFT K_APP  &kp LANG1           &kp RGUI            &kp RALT            &kp RCTRL
-                    &kp C_SLEEP         &none               &kp C_BRI_DN        &none               &kp C_BRI_UP        &kp C_VOL_UP        &kp DEL             &kp C_VOL_DN        &kp C_AC_BACK       &kp C_MUTE
+&kp LGUI            &kp LALT            &kp LCTRL           &kp LANG2           &ht_l LSHIFT K_APP  &lt 1 ENTER         &lt 2 BSPC          &ht_r RSHIFT K_APP  &kp LANG1           &kp DEL             &kp C_AC_BACK       &kp ESC
+                    &kp C_SLEEP         &kp RIGHT           &kp C_BRI_DN        &kp LEFT            &kp C_BRI_UP        &kp C_VOL_UP        &kp LG(C)           &kp C_VOL_DN        &kp LG(V)           &kp C_MUTE
 &trans              &trans              &trans                                                                                                                                                                        &trans              &trans              &trans
 &trans              &trans              &trans              &trans              &trans                                                    &trans              &trans              &trans              &trans              &trans
             >;
@@ -143,8 +145,8 @@
 &msc SCRL_UP        &mkp LCLK           &mmv MOVE_UP        &mkp RCLK           &msc SCRL_UP                                              &msc SCRL_DOWN      &mkp LCLK           &mmv MOVE_UP        &mkp RCLK           &msc SCRL_UP
 &msc SCRL_DOWN      &mmv MOVE_LEFT      &mmv MOVE_DOWN      &mmv MOVE_RIGHT     &msc SCRL_DOWN                                            &msc SCRL_UP        &mmv MOVE_LEFT      &mmv MOVE_DOWN      &mmv MOVE_RIGHT     &msc SCRL_DOWN
 &none               &msc SCRL_LEFT      &none               &msc SCRL_RIGHT     &mkp MCLK                                                 &mkp MCLK           &msc SCRL_LEFT      &none               &msc SCRL_RIGHT     &none
-&kp LCTRL           &kp LALT            &kp LGUI            &kp LANG2           &ht_l LSHIFT SPACE  &lt 1 ENTER         &lt 2 BSPC          &ht_r RSHIFT SPACE  &kp LANG1           &kp RGUI            &kp RALT            &kp RCTRL
-                    &kp C_SLEEP         &kp TAB             &kp C_BRI_DN        &kp ESC             &kp C_BRI_UP        &kp C_VOL_UP        &kp DEL             &kp C_VOL_DN        &kp RSHIFT          &kp C_MUTE
+&kp LGUI            &kp LALT            &kp LCTRL           &kp LANG2           &ht_l LSHIFT SPACE  &lt 1 ENTER         &lt 2 BSPC          &ht_r RSHIFT SPACE  &kp LANG1           &kp DEL             &kp C_AC_BACK       &kp ESC
+                    &kp C_SLEEP         &kp RIGHT           &kp C_BRI_DN        &kp LEFT            &kp C_BRI_UP        &kp C_VOL_UP        &kp LG(C)           &kp C_VOL_DN        &kp LG(V)           &kp C_MUTE
 &trans              &trans              &trans                                                                                                                                                                        &trans              &trans              &trans
 &trans              &trans              &trans              &trans              &trans                                                    &trans              &trans              &trans              &trans              &trans
             >;
