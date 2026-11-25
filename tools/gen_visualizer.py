@@ -2,7 +2,7 @@
 """config/lalapadgen2.keymap を読んで、レイヤーごとの割当を Gen2 の物理配置で表示する HTML を作る。
 
 使い方:
-    python3 tools/gen_visualizer.py                 # visualizer/lalapadgen2_visualizer.html を作る
+    python3 tools/gen_visualizer.py                 # docs/lalapadgen2_visualizer.html を作る
     python3 tools/gen_visualizer.py --out 別の場所.html
 
 キーマップを直したら毎回これを実行する。HTML にはキーマップの SHA-256 と git のコミットを埋め込むので、
@@ -20,7 +20,7 @@ ROOT = Path(__file__).resolve().parent.parent
 KEYMAP = ROOT / "config" / "lalapadgen2.keymap"
 LAYOUT = ROOT / "config" / "boards" / "shields" / "lalapadgen2" / "lalapadgen2-layouts.dtsi"
 SHIELD = ROOT / "config" / "boards" / "shields" / "lalapadgen2" / "lalapadgen2.dtsi"
-DEFAULT_OUT = ROOT / "visualizer" / "lalapadgen2_visualizer.html"
+DEFAULT_OUT = ROOT / "docs" / "lalapadgen2_visualizer.html"
 
 
 def strip_comments(s):

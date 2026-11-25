@@ -5,7 +5,7 @@
 （このスクリプトを再実行すると keymap は上書きされる）
 
 使い方:
-    python3 tools/vil2zmk.py source/ohnishi_cornix.vil config/lalapadgen2.keymap
+    python3 tools/vil2zmk.py docs/ohnishi_cornix.vil config/lalapadgen2.keymap
 
 位置の対応（Cornix の Vial 行列 → Gen2 のキー位置番号）
     左手  行 r=0..2, 列 c=1..5          → pos r*10 + (c-1)           （列0=外側の列は Gen2 にない）
