@@ -1,0 +1,15 @@
+# 接続先 OS で割当を切り替える behavior（REQ-195）
+
+config ZMK_BEHAVIOR_OS_MORPH
+    bool
+    default y
+    depends on DT_HAS_LALAPAD_BEHAVIOR_OS_MORPH_ENABLED
+
+config ZMK_BEHAVIOR_OS_MORPH_WIN_PROFILES
+    hex "Windows として扱う Bluetooth プロファイル（ビットマスク。ZMK の番号は 0 始まり）"
+    default 0x18
+    depends on ZMK_BEHAVIOR_OS_MORPH
+    help
+      ビット n が立っているプロファイル（BT_SEL n）に Bluetooth で接続しているあいだ、
+      os-morph の 2 番目の割当（Windows 用）を使う。既定 0x18 = BT_SEL 3・4
+      （1 始まりで数えて 4 番・5 番）。USB で接続しているときは常に 1 番目（Mac 用）。
