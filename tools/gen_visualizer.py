@@ -92,7 +92,20 @@ def parse_keymap(text):
         tt = re.search(r"tapping-term-ms\s*=\s*<(\d+)>", body)
         fl = re.search(r"flavor\s*=\s*\"([\w-]+)\"", body)
         behaviors[m.group(1)] = {"tapping_term": tt and int(tt.group(1)), "flavor": fl and fl.group(1)}
-    return layers, combos, conds, behaviors
+
+    # マクロ（&macro_press 修飾キー → &macro_tap キー → &macro_release）。表示用に「⌃⇧⌘＋キー」の形にする
+    macros = {}
+    sym = {"LCTRL": "⌃", "LSHIFT": "⇧", "LALT": "⌥", "LGUI": "⌘", "RCTRL": "⌃", "RSHIFT": "⇧", "RALT": "⌥", "RGUI": "⌘"}
+    for m in re.finditer(r"(\w+):\s*\w+\s*\{\s*compatible\s*=\s*\"zmk,behavior-macro\";(.*?)\};", s, flags=re.S):
+        body = re.search(r"bindings\s*=(.*?);", m.group(2), flags=re.S).group(1)
+        held, taps, steps = [], [], []
+        for kind, codes in re.findall(r"<&macro_(press|tap|release)((?:\s+&kp\s+\w+)+)>", body):
+            ks = re.findall(r"&kp\s+(\w+)", codes)
+            steps.append(kind + " " + "+".join(ks))
+            (held if kind == "press" else taps if kind == "tap" else []).extend(ks)
+        label = "".join(sym.get(k, k) for k in held) + "＋".join(t.replace("KP_N", "テンキー") for t in taps)
+        macros[m.group(1)] = {"label": label, "detail": label + "（" + " → ".join(steps) + "）"}
+    return layers, combos, conds, behaviors, macros
 
 
 def parse_physical():
@@ -191,7 +204,7 @@ def main():
     args = ap.parse_args()
 
     text = KEYMAP.read_text(encoding="utf-8")
-    layers, combos, conds, behaviors = parse_keymap(text)
+    layers, combos, conds, behaviors, macros = parse_keymap(text)
     phys = parse_physical()
     for L in layers:
         if len(L["bindings"]) != len(phys):
@@ -202,6 +215,7 @@ def main():
         "combos": combos,
         "conditional": conds,
         "behaviors": behaviors,
+        "macros": macros,
         "physical": phys,
         "geometry": build_geometry(),
         "trackpad": parse_trackpad_positions(),

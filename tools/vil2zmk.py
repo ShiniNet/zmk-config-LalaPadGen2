@@ -1,22 +1,25 @@
 #!/usr/bin/env python3
-"""Cornix の大西配列.vil（Vial, 10レイヤー）から LaLapad Gen2 用の ZMK キーマップを起こす。
+"""Cornix の .vil（Vial, 10レイヤー）から LaLapad Gen2 用の ZMK キーマップを起こす。
 
-一度きりの変換用。変換後は config/lalapadgen2.keymap が正本で、手で直してよい。
-（このスクリプトを再実行すると keymap は上書きされる）
+正本は Cornix の .vil（REQ-194 からは docs/cornix_20261126.vil）。キーマップを直すときは
+.vil を差し替えるか、Gen2 側の決めごと（apply_gen2）を直して、このスクリプトを再実行する。
+config/lalapadgen2.keymap は上書きされる。
 
 使い方:
-    python3 tools/vil2zmk.py docs/ohnishi_cornix.vil config/lalapadgen2.keymap
+    python3 tools/vil2zmk.py docs/cornix_20261126.vil config/lalapadgen2.keymap
 
 位置の対応（Cornix の Vial 行列 → Gen2 のキー位置番号）
     左手  行 r=0..2, 列 c=1..5          → pos r*10 + (c-1)           （列0=外側の列は Gen2 にない）
     右手  行 r=4..6, 列 c=5..1（鏡像）    → pos (r-4)*10 + 5 + (5-c)
     親指  左 行3 列0..5                  → pos 30..35
           右 行7 列5..0                  → pos 36..41
-    外側の列 上段・中段（ESC/TAB/戻る/DEL）→ 親指列の右下段・右親指の Shift のタップ（REQ-193。apply_req193）
+    外側の列（Gen2 にない列）            → 5方向スイッチの左右と下（レイヤー 0〜4 は apply_gen2 が上書き）
     列6（エンコーダー押下）と回転         → 5方向スイッチの押し込みと上下（左=エンコーダー0、右=エンコーダー1）
+                                            上下はレイヤー 0〜4 で apply_gen2 が上書き（REQ-192・193 の決定を優先）
     トラックパッドの仮想キー（52..67）    → macOS のトラックパッドの作法に合わせた割当（REQ-192）
+    コンボ・マクロ                         → .vil の定義をそのまま移す（REQ-194）。.vil にないコンボは作らない
 
-.vil に定義のない同時押し（コンボ）は作らない（REQ-192）。
+置けなかったキー（Gen2 側の決めごとで上書きしたもの）は実行時に一覧を出す。
 """
 import json
 import sys
@@ -27,8 +30,8 @@ SIMPLE = {
     "KC_SPACE": "SPACE", "KC_BSPACE": "BSPC",
     "KC_COMMA": "COMMA", "KC_DOT": "DOT", "KC_MINUS": "MINUS", "KC_SLASH": "SLASH",
     "KC_SCOLON": "SEMI", "KC_QUOTE": "SQT", "KC_LBRACKET": "LBKT", "KC_RBRACKET": "RBKT",
-    "KC_NONUS_HASH": "NON_US_HASH",
-    "KC_LCTRL": "LCTRL", "KC_LALT": "LALT", "KC_LGUI": "LGUI",
+    "KC_NONUS_HASH": "NON_US_HASH", "KC_RO": "INTERNATIONAL_1",
+    "KC_LCTRL": "LCTRL", "KC_LALT": "LALT", "KC_LGUI": "LGUI", "KC_LSHIFT": "LSHIFT",
     "KC_RCTRL": "RCTRL", "KC_RALT": "RALT", "KC_RGUI": "RGUI", "KC_RSHIFT": "RSHIFT",
     "KC_LANG1": "LANG1", "KC_LANG2": "LANG2",
     "KC_HOME": "HOME", "KC_END": "END", "KC_PGUP": "PG_UP", "KC_PGDOWN": "PG_DN",
@@ -90,9 +93,33 @@ def conv(code, pos=None):
             return f"&kp {mod}"  # タップ時は何も出さない＝押している間だけ Shift
         side = "ht_l" if pos in LEFT_POS else "ht_r"
         return f"&{side} {mod} {SIMPLE[inner]}"
-    if code.startswith("LSFT(") and code.endswith(")"):
-        return f"&kp LS({SIMPLE[code[5:-1]]})"
+    if code.startswith("TO(") and code.endswith(")"):
+        return f"&to {int(code[3:-1])}"
+    if code.startswith("M") and code[1:].isdigit():
+        return f"&m{int(code[1:])}"
+    w = wrapped(code)
+    if w:
+        return f"&kp {w}"
     raise SystemExit(f"未対応のキーコード: {code}")
+
+
+# 修飾キー付きのキーコード（LSFT(KC_1) など）→ ZMK の LS(N1) など
+WRAP = {"LSFT": ["LS"], "LCTL": ["LC"], "LALT": ["LA"], "LGUI": ["LG"], "SGUI": ["LS", "LG"],
+        "RSFT": ["RS"], "RCTL": ["RC"], "RALT": ["RA"], "RGUI": ["RG"]}
+
+
+def wrapped(code):
+    if "(" not in code or not code.endswith(")"):
+        return None
+    head, inner = code[:code.index("(")], code[code.index("(") + 1:-1]
+    if head not in WRAP:
+        return None
+    inner_z = wrapped(inner) or SIMPLE.get(inner)
+    if inner_z is None:
+        raise SystemExit(f"未対応のキーコード: {code}")
+    for m in reversed(WRAP[head]):
+        inner_z = f"{m}({inner_z})"
+    return inner_z
 
 
 def gen2_layer(vil_layer, enc, idx):
@@ -117,15 +144,27 @@ def gen2_layer(vil_layer, enc, idx):
     b[49] = conv(r_ccw)
     b[51] = conv(vil_layer[5][6])   # 右の列6（エンコーダー押下）
     # Cornix の外側の列（Gen2 にない列）は 5方向スイッチの左右に置く（REQ-192）。
-    # レイヤー 0〜4 では apply_req193 が左右を ←→・⌘C/⌘V に上書きする（REQ-193）。
+    # レイヤー 0〜4 では apply_gen2 が左右を ←→・⌘C/⌘V に上書きする（REQ-193）。
     #   左手: 外側の列の上段 → 左スイッチの「左」(45)、中段 → 左スイッチの「右」(43)
     #   右手: 外側の列の上段 → 右スイッチの「右」(50)、中段 → 右スイッチの「左」(48)
-    #   （どちらの手も、外側へ倒すと上段、内側へ倒すと中段。下段は .vil で全レイヤー KC_NO）
+    #   （どちらの手も、外側へ倒すと上段、内側へ倒すと中段）
+    #   下段は、そのレイヤーのエンコーダーの回転が空き（KC_NO）なら 5方向スイッチの「下」に置く（REQ-194。
+    #   L5 の TO(6) のため）。回転に割当があるときは置けないので、dropped に記録する。
     b[45] = conv(vil_layer[0][0])
     b[43] = conv(vil_layer[1][0])
     b[50] = conv(vil_layer[4][0])
     b[48] = conv(vil_layer[5][0])
+    for bottom, down, ccw in ((vil_layer[2][0], 44, l_ccw), (vil_layer[6][0], 49, r_ccw)):
+        if bottom in ("KC_NO", -1):
+            continue
+        if ccw in ("KC_NO", -1) and b[down] == "&none":
+            b[down] = conv(bottom)
+        else:
+            DROPPED.append((idx, f"外側の列の下段 {bottom}", "5方向スイッチの下が回転の割当で埋まっている"))
     return b
+
+
+DROPPED = []   # (レイヤー, .vil 側のキー, 置かなかった理由)
 
 
 # トラックパッドの仮想キー（Gen2 の shield 定義 POS_TP_*）。macOS のトラックパッドの作法に合わせる（REQ-192）。
@@ -164,7 +203,7 @@ SYSTEM = (
 
 LAYER_NAMES = [
     ("BASE", "Base"), ("NUM", "Num"), ("NAV", "Nav"), ("FUNC", "Fn"), ("MOUSE", "Mouse"),
-    ("L5", "L5"), ("L6", "L6"), ("L7", "L7"), ("L8", "L8"), ("L9", "L9"), ("SYSTEM", "System"),
+    ("L5", "QWERTY"), ("L6", "Kana2"), ("L7", "L7"), ("L8", "L8"), ("L9", "L9"), ("SYSTEM", "System"),
 ]
 
 ROWS = [list(range(0, 10)), list(range(10, 20)), list(range(20, 30)), list(range(30, 42)),
@@ -186,37 +225,71 @@ def fmt_rows(b):
     return "\n".join(out)
 
 
-def apply_req193(layers):
-    """稜太の追加修正（REQ-193、2026-11-26）を、.vil から起こしたレイヤーに上書きする。"""
-    for i in range(5):                       # 実際に使うレイヤー 0〜4（5〜9 は空き）
+# Gen2 側の決めごと（REQ-192・REQ-193）。.vil を正本にしつつ、Gen2 固有の部分はこちらを優先する（REQ-194）。
+GEN2_FIVE_WAY = {          # レイヤー 0〜4 の 5方向スイッチ（押し込み 42・51 は .vil のまま）
+    45: "&kp LEFT", 43: "&kp RIGHT",              # 左手の左右 = ← →（REQ-193）
+    48: "&kp LG(C)", 50: "&kp LG(V)",             # 右手の左右 = コピー・ペースト（REQ-193）
+    46: "&kp C_BRI_UP", 44: "&kp C_BRI_DN",       # 左手の上下 = 輝度（REQ-192 で決めた割当。REQ-194 の .vil とは異なる）
+    47: "&kp C_VOL_UP", 49: "&kp C_VOL_DN",       # 右手の上下 = 音量
+}
+# 右下段の中指・薬指（39・40）が空き（.vil で KC_NO）なら Delete と 戻る を置く（REQ-193 の仮置きを続ける）
+GEN2_FILL_EMPTY = {39: "&kp DEL", 40: "&kp C_AC_BACK"}
+GEN2_FILL_LAYERS = (0, 2, 3, 4)
+
+
+def apply_gen2(layers):
+    for i in range(5):                       # 5方向スイッチの割当を決めたレイヤー 0〜4
         b = layers[i]
-        # 1. 左手の修飾キー: Ctrl と ⌘ を入れ替える（左下段 30 と 32）
-        if b[30] == "&kp LCTRL" and b[32] == "&kp LGUI":
-            b[30], b[32] = "&kp LGUI", "&kp LCTRL"
-        # 2. 右手の修飾キーは置かない。右Ctrl の跡（41）に Esc、
-        #    右⌘・右Opt の跡（39・40）に、5方向スイッチから外れた Delete と 戻る を仮置き
-        if b[41] == "&kp RCTRL":
-            b[41] = "&kp ESC"
-        if b[39] == "&kp RGUI":
-            b[39] = "&kp DEL"
-        if b[40] == "&kp RALT":
-            b[40] = "&kp C_AC_BACK"
-        # 4. 5方向スイッチの左右: 左手＝← →、右手＝左がコピー（⌘C）・右がペースト（⌘V）
-        #    押し込み・上下（Sleep・ミュート・輝度・音量）は REQ-192 のまま
-        b[45], b[43] = "&kp LEFT", "&kp RIGHT"
-        b[48], b[50] = "&kp LG(C)", "&kp LG(V)"
-    # 3. 右親指の Shift（位置 37。.vil では RSFT_T(KC_NO)）: タップ＝Tab、長押し＝Shift
-    #    Num〜Mouse レイヤーの 37 は .vil どおり（タップ＝Space または App）
-    if layers[0][37] == "&kp RSHIFT":
-        layers[0][37] = "&ht_r RSHIFT TAB"
-    # 5. Num レイヤーのテンキーを右へ1列ずらす（0 を 1 の左、: を 4 の左に置く）
-    #    右上の + は残り、* は外す（JIS では ⇧＋: で * が出る）。−・/・. は元の位置
-    num = layers[1]
-    for p, code in {5: "KP_PLUS", 6: "KP_N7", 7: "KP_N8", 8: "KP_N9",
-                    15: "SQT", 16: "KP_N4", 17: "KP_N5", 18: "KP_N6",
-                    25: "KP_N0", 26: "KP_N1", 27: "KP_N2", 28: "KP_N3"}.items():
-        num[p] = "&kp " + code
+        for p, binding in GEN2_FIVE_WAY.items():
+            if b[p] not in ("&none", binding):
+                DROPPED.append((i, f"位置 {p} の {b[p]}", f"5方向スイッチの決めごと（{binding}）を優先"))
+            b[p] = binding
+    for i in GEN2_FILL_LAYERS:
+        for p, binding in GEN2_FILL_EMPTY.items():
+            if layers[i][p] == "&none":
+                layers[i][p] = binding
     return layers
+
+
+def zmk_combos(vil, gen2_layers):
+    """.vil のコンボを、レイヤー 0 の Gen2 位置に置き換える。"""
+    timeout = int(vil.get("settings", {}).get("2", 50))     # QMK 設定 2 = Combo time out
+    vl0 = vil["layout"][0]
+    out = []
+    for n, c in enumerate(vil.get("combo", [])):
+        keys, result = [k for k in c[:4] if k != "KC_NO"], c[4]
+        if not keys:
+            continue
+        positions = []
+        for k in keys:
+            # .vil のコンボはキーコードで指定する。レイヤー 0 で同じキーを探す
+            # （mod-tap は置く側で ht_l / ht_r が変わるので、behavior 名ではなく引数で比べる）
+            want = conv(k, None)
+            beh, args = want.split()[0], want.split()[1:]
+            same_beh = ("&ht_l", "&ht_r") if beh in ("&ht_l", "&ht_r") else (beh,)
+            found = [q for q in range(42) if gen2_layers[0][q].split()[0] in same_beh
+                     and gen2_layers[0][q].split()[1:] == args]
+            if len(found) != 1:
+                raise SystemExit(f"コンボ {n} のキー {k} の位置が決まらない: {found}")
+            positions.append(found[0])
+        out.append({"name": f"combo_{n}", "positions": positions, "binding": conv(result), "timeout": timeout,
+                    "keys": keys, "result": result})
+    return out
+
+
+def zmk_macros(vil):
+    out = []
+    for n, m in enumerate(vil.get("macro", [])):
+        if not m:
+            continue
+        steps = []
+        for act in m:
+            kind, codes = act[0], act[1:]
+            z = " ".join(f"&kp {SIMPLE[c]}" for c in codes)
+            steps.append({"down": f"<&macro_press {z}>", "tap": f"<&macro_tap {z}>",
+                          "up": f"<&macro_release {z}>"}[kind])
+        out.append({"name": f"m{n}", "steps": steps, "src": m})
+    return out
 
 
 def main(vil_path, out_path):
@@ -224,17 +297,18 @@ def main(vil_path, out_path):
     layers = vil["layout"]
     enc = vil["encoder_layout"]
     used_td = [t for t in vil.get("tap_dance", []) if any(x != "KC_NO" for x in t[:4])]
-    used_combo = [c for c in vil.get("combo", []) if any(x != "KC_NO" for x in c)]
-    if used_td or used_combo or any(m for m in vil.get("macro", [])):
-        raise SystemExit("tap_dance / combo / macro に使用中のものがある。変換規則を足すこと")
+    if used_td or vil.get("key_override") or vil.get("alt_repeat_key"):
+        raise SystemExit("tap_dance / key_override / alt_repeat_key に使用中のものがある。変換規則を足すこと")
 
     all_layers = []
     for i, vl in enumerate(layers):
         b = gen2_layer(vl, enc, i)
         tp = TP_BASE if i == 0 else TP_TRANS
         all_layers.append(b + tp)
-    apply_req193(all_layers)
+    apply_gen2(all_layers)
     all_layers.append(SYSTEM + TP_TRANS)
+    combos = zmk_combos(vil, all_layers)
+    macros = zmk_macros(vil)
 
     blocks = []
     for (node, disp), b in zip(LAYER_NAMES, all_layers):
@@ -246,25 +320,45 @@ def main(vil_path, out_path):
             f"        }};"
         )
 
-    text = TEMPLATE.replace("@@LAYERS@@", "\n\n".join(blocks))
+    macro_txt = "".join(
+        f"\n        /* .vil のマクロ M{m['name'][1:]}: {' → '.join(a[0] + ' ' + '+'.join(a[1:]) for a in m['src'])} */\n"
+        f"        {m['name']}: macro_{m['name']} {{\n"
+        f"            compatible = \"zmk,behavior-macro\";\n"
+        f"            #binding-cells = <0>;\n"
+        f"            bindings\n                = " + "\n                , ".join(m["steps"]) + ";\n"
+        f"        }};\n" for m in macros)
+    combo_txt = "".join(
+        f"\n        /* .vil のコンボ {c['name'][6:]}: {' + '.join(c['keys'])} → {c['result']} */\n"
+        f"        {c['name']} {{\n"
+        f"            timeout-ms = <{c['timeout']}>;\n"
+        f"            key-positions = <{' '.join(map(str, c['positions']))}>;\n"
+        f"            bindings = <{c['binding']}>;\n"
+        f"            layers = <BASE>;\n"
+        f"        }};\n" for c in combos)
+    text = (TEMPLATE.replace("@@LAYERS@@", "\n\n".join(blocks))
+            .replace("@@MACROS@@", macro_txt).replace("@@COMBOS@@", combo_txt))
     open(out_path, "w", encoding="utf-8").write(text)
-    print(f"wrote {out_path}: {len(all_layers)} layers")
+    print(f"wrote {out_path}: {len(all_layers)} layers, {len(combos)} combos, {len(macros)} macros")
+    for i, what, why in DROPPED:
+        print(f"  置かなかった: L{i} {what}（{why}）")
 
 
 TEMPLATE = r"""/*
- * LaLapad Gen2 キーマップ — Cornix 大西配列.vil（10レイヤー）から起こしたもの（REQ-189、REQ-192・REQ-193 で修正）
+ * LaLapad Gen2 キーマップ — Cornix の Cornix_20261126.vil（10レイヤー）から起こしたもの
+ * （REQ-189 で作成、REQ-192・REQ-193 の Gen2 側の決めごと、REQ-194 で .vil を差し替え）
  *
- * 正本はこのファイル。tools/vil2zmk.py は最初の変換に使ったもの（再実行すると上書きされる）。
- * 直したら `python3 tools/gen_visualizer.py` でビジュアライザーを作り直す。
+ * 正本は docs/cornix_20261126.vil と tools/vil2zmk.py（このファイルは生成物。手で直さず、再生成する）。
+ *   python3 tools/vil2zmk.py docs/cornix_20261126.vil config/lalapadgen2.keymap
+ *   python3 tools/gen_visualizer.py
  *
- * レイヤー: 0 Base(大西) / 1 Num / 2 Nav / 3 Fn / 4 Mouse / 5-9 空き（.vilどおり）/ 10 System
+ * レイヤー: 0 Base(大西) / 1 Num / 2 Nav / 3 Fn / 4 Mouse / 5 QWERTY / 6 Kana2（別のカナ配列）/ 7-9 空き / 10 System
  *   - 1 と 2 を同時に押すと 10 System（Gen2 標準の Num+Nav→System と同じ仕組み）
  *   - トラックパッドの低速モードは shield 側で layer 1・2 に掛かる（Gen2 標準のまま）
- *   - 左下段は ⌘・Opt・Ctrl。右下段に修飾キーは置かず、Delete・戻る・Esc（REQ-193）
- *   - 右親指の Shift はタップで Tab（REQ-193）
- *   - 5方向スイッチの左右: 左手＝←→、右手＝⌘C・⌘V（REQ-193）
+ *   - 左下段の修飾キーは .vil どおり（L0・L5・L6 は ⌘・Opt・Ctrl、L1〜L4 は Ctrl・Opt・⌘）
+ *   - 右下段は .vil どおり Esc。空いている中指・薬指に Delete・戻る（REQ-193 の仮置き）
+ *   - 5方向スイッチ（L0〜L4）: 左右＝←→／⌘C・⌘V、上下＝輝度／音量（REQ-192・193）、押し込みは .vil どおり
  *   - トラックパッドのジェスチャーは macOS の作法（⌃←/⌃→・Mission Control など）
- *   - .vil に定義のない同時押し（コンボ）は置かない
+ *   - コンボ・マクロは .vil の定義どおり（Shift の親指＋? で !、M0）
  */
 
 #define ZMK_POINTING_DEFAULT_SCRL_VAL 120   /* smooth scrolling 有効時の推奨値 */
@@ -335,7 +429,11 @@ TEMPLATE = r"""/*
             hold-trigger-on-release;
             bindings = <&kp>, <&kp>;
         };
-    };
+@@MACROS@@    };
+
+    combos {
+        compatible = "zmk,combos";
+@@COMBOS@@    };
 
     keymap {
         compatible = "zmk,keymap";

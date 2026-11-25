@@ -115,7 +115,9 @@
     <div class="box">
       <h2>同時押し（コンボ）</h2>
       <table id="comboTable"></table>
-      <p class="note">大西配列.vil に同時押しの定義はないので、同時押しは置いていない。Cornix の外側の列のうち Esc・Delete・戻るは右下段、Tab は右親指の Shift のタップに置いた。</p>
+      <p class="note">Cornix_20261126.vil の定義どおり（Shift の親指を押したまま ? を押すと !）。Base でだけ働く。待ち時間は .vil の Combo time out（10000 ms）どおり。</p>
+      <h2>マクロ</h2>
+      <table id="macroTable"></table>
     </div>
     <div class="box">
       <h2>トラックパッドの操作</h2>
@@ -125,7 +127,7 @@
     <div class="box">
       <h2>5方向スイッチ</h2>
       <table id="fiveTable"></table>
-      <p class="note">上下＝Cornix のエンコーダー（左＝輝度、右＝音量）、押し込み＝エンコーダーの押下キー。左右＝左手は矢印 ←→、右手はコピー（左）とペースト（右）。</p>
+      <p class="note">L0〜L4: 上下＝左手は輝度・右手は音量、左右＝左手は矢印 ←→・右手はコピー（左）とペースト（右）。押し込み＝Cornix のエンコーダーの押下キー（.vil どおり）。L5・L6 は .vil どおり（外側の列のレイヤー切替キーを左右と下に置いた）。</p>
     </div>
   </section>
 </main>
@@ -153,6 +155,9 @@ const MOUSE = {
 };
 const ZDS = { "ZDS_XY ZDS_INC": "ポインタ速度+", "ZDS_XY ZDS_DEC": "ポインタ速度−", "ZDS_SC ZDS_INC": "スクロール速度+",
               "ZDS_SC ZDS_DEC": "スクロール速度−", "ZDS_ALL ZDS_RST": "速度を初期値に" };
+// JIS 配列で ⇧ と一緒に押したときの文字（Mac の JIS 入力）
+const JIS_SHIFT = { N1: "!", N2: "\"", N3: "#", N4: "$", N5: "%", N6: "&", N7: "'", N8: "(", N9: ")", MINUS: "=",
+                    COMMA: "<", DOT: ">", SLASH: "?", INTERNATIONAL_1: "_", SQT: "*", SEMI: "+", LBKT: "`", RBKT: "{", NON_US_HASH: "}" };
 const MODSYM = { LC: "⌃", LA: "⌥", LG: "⌘", LS: "⇧", RC: "⌃", RA: "⌥", RG: "⌘", RS: "⇧" };
 
 const MAC_SHORTCUTS = {
@@ -160,10 +165,12 @@ const MAC_SHORTCUTS = {
   "LC(UP)": ["Mission Control（⌃↑）", "system"], "LC(DOWN)": ["アプリケーションウインドウ（⌃↓）", "system"],
   "LC(LG(D))": ["調べる（⌃⌘D）", "system"],
   "LG(C)": ["コピー（⌘C）", "edit"], "LG(V)": ["ペースト（⌘V）", "edit"],
+  "LG(Z)": ["取り消し（⌘Z）", "edit"], "LG(X)": ["カット（⌘X）", "edit"], "LS(LG(Z))": ["やり直し（⇧⌘Z）", "edit"],
 };
 function keyLabel(code) {
   if (MAC_SHORTCUTS[code]) return MAC_SHORTCUTS[code];
-  if (code === "LS(SLASH)" || code === "RS(SLASH)") return ["?", "punct"];   // JIS でも US でも ?
+  const sh = code.match(/^[LR]S\(([A-Z0-9_]+)\)$/);
+  if (sh && JIS_SHIFT[sh[1]]) return [JIS_SHIFT[sh[1]], "punct"];          // ⇧＋記号・数字 = JIS の文字
   const m = code.match(/^(L[CAGS]|R[CAGS])\((.*)\)$/);
   if (m) { const inner = keyLabel(m[2]); return [MODSYM[m[1]] + inner[0], inner[1] === "letter" ? "edit" : inner[1]]; }
   if (/^[A-Z]$/.test(code)) return [code, "letter"];
@@ -171,6 +178,7 @@ function keyLabel(code) {
   if (/^KP_N\d$/.test(code)) return ["KP " + code.slice(4), "number"];
   if (/^F\d+$/.test(code)) return [code, "function"];
   if (JIS[code]) return [JIS[code], "punct"];
+  if (code === "INTERNATIONAL_1") return ["ろ（\\）", "punct"];
   if (KEYS[code]) return KEYS[code];
   return [code, "system"];
 }
@@ -193,6 +201,8 @@ function describe(b) {
     const [t, c] = keyLabel(args[1]); const [h] = keyLabel(args[0]);
     return { tap: t, cls: c, hold: "<b>長押し</b><br>" + h, code: args[1] };
   }
+  if (beh === "to") return { tap: "L" + args[0] + " " + layerName(+args[0]) + " へ", cls: "layer", hold: "切替（押すと移る）" };
+  if (DATA.macros && DATA.macros[beh]) return { tap: DATA.macros[beh].label, cls: "system" };
   if (beh === "mkp" || beh === "mmv" || beh === "msc") return { tap: MOUSE[args[0]] || args[0], cls: "mouse" };
   if (beh === "bt") {
     const t = args[0] === "BT_SEL" ? "BT " + args[1] : args[0] === "BT_CLR" ? "BT 登録解除" : args[0] === "BT_CLR_ALL" ? "BT 全解除" : args.join(" ");
@@ -217,6 +227,9 @@ function triggers(i) {
       out.push((p[0] === "&lt" ? d.tap + " を長押し" : d.tap + " を押している間") + "（位置 " + pos + "）");
     }
   });
+  DATA.layers.forEach((L, j) => L.bindings.forEach((b, pos) => {
+    if (b === "&to " + i && j !== i) out.push("L" + j + " " + L.name + " の「L" + i + " へ」（位置 " + pos + "）を押す");
+  }));
   if (i === 0) out.push("常に有効（いちばん下のレイヤー）");
   return out;
 }
@@ -312,6 +325,13 @@ function render() {
     const keysTxt = c.positions.map(p => { const d = describe(resolve(0, p).b); return (d.tap || "?") + "(" + p + ")"; }).join(" + ");
     const on = !c.layers || c.layers.includes(i);
     return `<tr${on ? "" : ' style="opacity:.4"'}><td>${keysTxt}</td><td>${describe(c.binding).tap}</td><td>${c.layers ? c.layers.map(n => "L" + n).join(" ") : "全レイヤー"}</td></tr>`;
+  }).join("");
+
+  const mt = document.getElementById("macroTable");
+  const ms = Object.entries(DATA.macros || {});
+  mt.innerHTML = ms.length === 0 ? "<tr><td>なし</td></tr>" : "<tr><th>名前</th><th>動き</th><th>置き場所</th></tr>" + ms.map(([name, m]) => {
+    const where = DATA.layers.flatMap((L, j) => L.bindings.map((b, pos) => b === "&" + name ? "L" + j + " 位置 " + pos + (FIVE.has(pos) ? "（5方向スイッチ " + FIVE_NAMES[pos] + "）" : "") : null)).filter(Boolean);
+    return `<tr><td>${name.toUpperCase()}</td><td>${m.detail}</td><td>${where.join("、") || "なし"}</td></tr>`;
   }).join("");
 
   const ft = document.getElementById("fiveTable");
