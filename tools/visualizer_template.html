@@ -115,7 +115,7 @@
     <div class="box">
       <h2>同時押し（コンボ）</h2>
       <table id="comboTable"></table>
-      <p class="note">大西配列.vil に同時押しの定義はないので、同時押しは置いていない。Cornix の外側の列（Esc・Tab・戻る・Delete）は 5方向スイッチの左右に置いた。</p>
+      <p class="note">大西配列.vil に同時押しの定義はないので、同時押しは置いていない。Cornix の外側の列のうち Esc・Delete・戻るは右下段、Tab は右親指の Shift のタップに置いた。</p>
     </div>
     <div class="box">
       <h2>トラックパッドの操作</h2>
@@ -125,7 +125,7 @@
     <div class="box">
       <h2>5方向スイッチ</h2>
       <table id="fiveTable"></table>
-      <p class="note">上下＝Cornix のエンコーダー（左＝輝度、右＝音量）、押し込み＝エンコーダーの押下キー。左右＝Cornix の外側の列（外側へ倒すと上段のキー、内側へ倒すと中段のキー）。</p>
+      <p class="note">上下＝Cornix のエンコーダー（左＝輝度、右＝音量）、押し込み＝エンコーダーの押下キー。左右＝左手は矢印 ←→、右手はコピー（左）とペースト（右）。</p>
     </div>
   </section>
 </main>
@@ -159,6 +159,7 @@ const MAC_SHORTCUTS = {
   "LC(LEFT)": ["左の操作スペースへ（⌃←）", "system"], "LC(RIGHT)": ["右の操作スペースへ（⌃→）", "system"],
   "LC(UP)": ["Mission Control（⌃↑）", "system"], "LC(DOWN)": ["アプリケーションウインドウ（⌃↓）", "system"],
   "LC(LG(D))": ["調べる（⌃⌘D）", "system"],
+  "LG(C)": ["コピー（⌘C）", "edit"], "LG(V)": ["ペースト（⌘V）", "edit"],
 };
 function keyLabel(code) {
   if (MAC_SHORTCUTS[code]) return MAC_SHORTCUTS[code];

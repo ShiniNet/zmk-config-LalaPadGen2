@@ -12,7 +12,7 @@
     右手  行 r=4..6, 列 c=5..1（鏡像）    → pos (r-4)*10 + 5 + (5-c)
     親指  左 行3 列0..5                  → pos 30..35
           右 行7 列5..0                  → pos 36..41
-    外側の列 上段・中段（ESC/TAB/戻る/DEL）→ 5方向スイッチの左右（外側＝上段、内側＝中段）
+    外側の列 上段・中段（ESC/TAB/戻る/DEL）→ 親指列の右下段・右親指の Shift のタップ（REQ-193。apply_req193）
     列6（エンコーダー押下）と回転         → 5方向スイッチの押し込みと上下（左=エンコーダー0、右=エンコーダー1）
     トラックパッドの仮想キー（52..67）    → macOS のトラックパッドの作法に合わせた割当（REQ-192）
 
@@ -116,7 +116,8 @@ def gen2_layer(vil_layer, enc, idx):
     b[47] = conv(r_cw)
     b[49] = conv(r_ccw)
     b[51] = conv(vil_layer[5][6])   # 右の列6（エンコーダー押下）
-    # Cornix の外側の列（Gen2 にない列）は 5方向スイッチの左右に置く。
+    # Cornix の外側の列（Gen2 にない列）は 5方向スイッチの左右に置く（REQ-192）。
+    # レイヤー 0〜4 では apply_req193 が左右を ←→・⌘C/⌘V に上書きする（REQ-193）。
     #   左手: 外側の列の上段 → 左スイッチの「左」(45)、中段 → 左スイッチの「右」(43)
     #   右手: 外側の列の上段 → 右スイッチの「右」(50)、中段 → 右スイッチの「左」(48)
     #   （どちらの手も、外側へ倒すと上段、内側へ倒すと中段。下段は .vil で全レイヤー KC_NO）
@@ -185,6 +186,39 @@ def fmt_rows(b):
     return "\n".join(out)
 
 
+def apply_req193(layers):
+    """稜太の追加修正（REQ-193、2026-11-26）を、.vil から起こしたレイヤーに上書きする。"""
+    for i in range(5):                       # 実際に使うレイヤー 0〜4（5〜9 は空き）
+        b = layers[i]
+        # 1. 左手の修飾キー: Ctrl と ⌘ を入れ替える（左下段 30 と 32）
+        if b[30] == "&kp LCTRL" and b[32] == "&kp LGUI":
+            b[30], b[32] = "&kp LGUI", "&kp LCTRL"
+        # 2. 右手の修飾キーは置かない。右Ctrl の跡（41）に Esc、
+        #    右⌘・右Opt の跡（39・40）に、5方向スイッチから外れた Delete と 戻る を仮置き
+        if b[41] == "&kp RCTRL":
+            b[41] = "&kp ESC"
+        if b[39] == "&kp RGUI":
+            b[39] = "&kp DEL"
+        if b[40] == "&kp RALT":
+            b[40] = "&kp C_AC_BACK"
+        # 4. 5方向スイッチの左右: 左手＝← →、右手＝左がコピー（⌘C）・右がペースト（⌘V）
+        #    押し込み・上下（Sleep・ミュート・輝度・音量）は REQ-192 のまま
+        b[45], b[43] = "&kp LEFT", "&kp RIGHT"
+        b[48], b[50] = "&kp LG(C)", "&kp LG(V)"
+    # 3. 右親指の Shift（位置 37。.vil では RSFT_T(KC_NO)）: タップ＝Tab、長押し＝Shift
+    #    Num〜Mouse レイヤーの 37 は .vil どおり（タップ＝Space または App）
+    if layers[0][37] == "&kp RSHIFT":
+        layers[0][37] = "&ht_r RSHIFT TAB"
+    # 5. Num レイヤーのテンキーを右へ1列ずらす（0 を 1 の左、: を 4 の左に置く）
+    #    右上の + は残り、* は外す（JIS では ⇧＋: で * が出る）。−・/・. は元の位置
+    num = layers[1]
+    for p, code in {5: "KP_PLUS", 6: "KP_N7", 7: "KP_N8", 8: "KP_N9",
+                    15: "SQT", 16: "KP_N4", 17: "KP_N5", 18: "KP_N6",
+                    25: "KP_N0", 26: "KP_N1", 27: "KP_N2", 28: "KP_N3"}.items():
+        num[p] = "&kp " + code
+    return layers
+
+
 def main(vil_path, out_path):
     vil = json.load(open(vil_path, encoding="utf-8"))
     layers = vil["layout"]
@@ -199,6 +233,7 @@ def main(vil_path, out_path):
         b = gen2_layer(vl, enc, i)
         tp = TP_BASE if i == 0 else TP_TRANS
         all_layers.append(b + tp)
+    apply_req193(all_layers)
     all_layers.append(SYSTEM + TP_TRANS)
 
     blocks = []
@@ -217,7 +252,7 @@ def main(vil_path, out_path):
 
 
 TEMPLATE = r"""/*
- * LaLapad Gen2 キーマップ — Cornix 大西配列.vil（10レイヤー）から起こしたもの（REQ-189、REQ-192 で修正）
+ * LaLapad Gen2 キーマップ — Cornix 大西配列.vil（10レイヤー）から起こしたもの（REQ-189、REQ-192・REQ-193 で修正）
  *
  * 正本はこのファイル。tools/vil2zmk.py は最初の変換に使ったもの（再実行すると上書きされる）。
  * 直したら `python3 tools/gen_visualizer.py` でビジュアライザーを作り直す。
@@ -225,7 +260,9 @@ TEMPLATE = r"""/*
  * レイヤー: 0 Base(大西) / 1 Num / 2 Nav / 3 Fn / 4 Mouse / 5-9 空き（.vilどおり）/ 10 System
  *   - 1 と 2 を同時に押すと 10 System（Gen2 標準の Num+Nav→System と同じ仕組み）
  *   - トラックパッドの低速モードは shield 側で layer 1・2 に掛かる（Gen2 標準のまま）
- *   - Cornix の外側の列（Esc・Tab・戻る・Delete）は 5方向スイッチの左右
+ *   - 左下段は ⌘・Opt・Ctrl。右下段に修飾キーは置かず、Delete・戻る・Esc（REQ-193）
+ *   - 右親指の Shift はタップで Tab（REQ-193）
+ *   - 5方向スイッチの左右: 左手＝←→、右手＝⌘C・⌘V（REQ-193）
  *   - トラックパッドのジェスチャーは macOS の作法（⌃←/⌃→・Mission Control など）
  *   - .vil に定義のない同時押し（コンボ）は置かない
  */
