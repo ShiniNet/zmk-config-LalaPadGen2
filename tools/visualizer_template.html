@@ -114,7 +114,7 @@
   </header>
   <div class="ostoggle" id="ostoggle"></div>
   <nav class="tabs" id="tabs"></nav>
-  <p class="note" style="margin:-6px 0 12px">変更（REQ-195 追記、2026-11-26）: .vil の L5（QWERTY）と L6（別のカナ配列）を削除し、後ろのレイヤーを繰り上げた（空きの L7〜L9 → L5〜L7、System は L10 → L8）。System レイヤーに BT 5（BT_SEL 4、Windows 用）を追加し、Bluetooth プロファイル 1〜5 を選べるようにした。</p>
+  <p class="note" style="margin:-6px 0 12px">変更（最終版、2026-11-26）: ① BT 切り替えは <b>かな長押し（L4 Mouse）</b>へ移した。右手の上段に左から BT 1〜5、その下の段に出力先切替・再起動・書込モード・BT 登録解除・BT 全解除。System（L8）には F キーとトラックパッドの速さだけを残した。② .vil の L5（QWERTY）と L6（別のカナ配列）を削除し、後ろのレイヤーを繰り上げた（空きの L7〜L9 → L5〜L7、System は L10 → L8）。③ Num の右下段は Esc をやめて、その位置に ／、隣に −。④ 右下段の Delete・戻る の仮置きをやめた。⑤ コンボの待ち時間を 10000 ms → 50 ms に短くした。</p>
   <section class="summary">
     <div class="box"><span class="t">レイヤー</span><div class="m" id="layerTitle"></div></div>
     <div class="box"><span class="t">出し方</span><div class="m" id="layerTrigger"></div></div>
@@ -127,7 +127,7 @@
     <div class="box">
       <h2>同時押し（コンボ）</h2>
       <table id="comboTable"></table>
-      <p class="note">Cornix_20261126.vil の定義どおり（Shift の親指を押したまま ? を押すと !）。Base でだけ働く。待ち時間は .vil の Combo time out（10000 ms）どおり。</p>
+      <p class="note">Cornix_20261126.vil の定義どおり（Shift の親指と ? をほぼ同時に押すと !）。Base でだけ働く。待ち時間は 50 ms（ZMK・Vial の標準値。.vil の 10000 ms から短くした）。2 つ目のキーが 50 ms 以内に来ないときは、それぞれ普通に押したことになる。</p>
       <h2>マクロ</h2>
       <table id="macroTable"></table>
     </div>

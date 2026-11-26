@@ -189,18 +189,27 @@ TP_MAC_SWIPE = [
 TP_BASE = TP_MAC_ONE_PAD * 2 + TP_MAC_SWIPE * 2
 TP_TRANS = ["&trans"] * 16
 
-# Gen2 標準の System レイヤー（位置 0..51）。ここでは layer 10 に置き、Num+Nav 同時押しで出す。
+# Gen2 標準の System レイヤー（位置 0..51）。layer 8 に置き、Num+Nav 同時押しで出す。
+# BT 切り替えとシステム系キー（出力先・リセット・ブートローダー・BT 登録解除）は、かな長押しのレイヤー（L4）へ
+# 移した（REQ-195 追記3）。ここには F1〜F15 とトラックパッドの速さの調整だけを残す
 SYSTEM = (
-    ["&kp F1", "&kp F2", "&kp F3", "&kp F4", "&kp F5",
-     "&out OUT_TOG", "&bt BT_SEL 0", "&bt BT_SEL 1", "&bt BT_SEL 2", "&bt BT_SEL 3"]
-    + ["&kp F6", "&kp F7", "&kp F8", "&kp F9", "&kp F10",
-       "&sys_reset", "&bootloader", "&bt BT_CLR", "&bt BT_CLR_ALL", "&bt BT_SEL 4"]
+    ["&kp F1", "&kp F2", "&kp F3", "&kp F4", "&kp F5"] + ["&none"] * 5
+    + ["&kp F6", "&kp F7", "&kp F8", "&kp F9", "&kp F10"] + ["&none"] * 5
     + ["&kp F11", "&kp F12", "&kp F13", "&kp F14", "&kp F15",
        "&zip_dyn_scale ZDS_XY ZDS_INC", "&zip_dyn_scale ZDS_XY ZDS_DEC",
        "&zip_dyn_scale ZDS_SC ZDS_INC", "&zip_dyn_scale ZDS_SC ZDS_DEC",
        "&zip_dyn_scale ZDS_ALL ZDS_RST"]
     + ["&trans"] * 22
 )
+
+# かな長押しで入るレイヤー（L4 Mouse）に置く BT 切り替えとシステム系キー（REQ-195 追記3、2026-11-26 稜太の指示）
+#   右手の上段（位置 5〜9）を左端から BT_SEL 0〜4、その下の段（位置 15〜19）にシステム系キー。
+#   下の段は Gen2 標準の System レイヤーの並び（出力先切替 → リセット → ブートローダー → BT 登録解除 → 全解除）を保つ
+KANA_HOLD_LAYER = 4
+KANA_HOLD_SYSTEM = {
+    5: "&bt BT_SEL 0", 6: "&bt BT_SEL 1", 7: "&bt BT_SEL 2", 8: "&bt BT_SEL 3", 9: "&bt BT_SEL 4",
+    15: "&out OUT_TOG", 16: "&sys_reset", 17: "&bootloader", 18: "&bt BT_CLR", 19: "&bt BT_CLR_ALL",
+}
 
 LAYER_NAMES = [
     ("BASE", "Base"), ("NUM", "Num"), ("NAV", "Nav"), ("FUNC", "Fn"), ("MOUSE", "Mouse"),
@@ -233,9 +242,10 @@ GEN2_FIVE_WAY = {          # レイヤー 0〜4 の 5方向スイッチ（押し
     46: "&kp C_BRI_UP", 44: "&kp C_BRI_DN",       # 左手の上下 = 輝度（REQ-192 で決めた割当。REQ-194 の .vil とは異なる）
     47: "&kp C_VOL_UP", 49: "&kp C_VOL_DN",       # 右手の上下 = 音量
 }
-# 右下段の中指・薬指（39・40）が空き（.vil で KC_NO）なら Delete と 戻る を置く（REQ-193 の仮置きを続ける）
-GEN2_FILL_EMPTY = {39: "&kp DEL", 40: "&kp C_AC_BACK"}
-GEN2_FILL_LAYERS = (0, 2, 3, 4)
+# Num の右下段（REQ-194 追記、2026-11-26 稜太の指示）: Esc は要らない。Esc の位置（41）に「/」、その隣（40）を「-」に。
+#   テンキーの他のキーに合わせてテンキーの / と - を使う（JIS／US の設定に左右されない）
+NUM_EDIT = {41: ("&kp ESC", "&kp KP_DIVIDE"), 40: ("&kp KP_DIVIDE", "&kp KP_MINUS")}
+# REQ-193 で右下段の空き（39・40）に仮置きした Delete・戻る は置かない（REQ-194 判断点 (e) の決定）
 
 
 def apply_gen2(layers):
@@ -245,16 +255,30 @@ def apply_gen2(layers):
             if b[p] not in ("&none", binding):
                 DROPPED.append((i, f"位置 {p} の {b[p]}", f"5方向スイッチの決めごと（{binding}）を優先"))
             b[p] = binding
-    for i in GEN2_FILL_LAYERS:
-        for p, binding in GEN2_FILL_EMPTY.items():
-            if layers[i][p] == "&none":
-                layers[i][p] = binding
+    for p, (was, binding) in NUM_EDIT.items():
+        if layers[1][p] != was:
+            raise SystemExit(f"Num の位置 {p} が想定（{was}）と違う: {layers[1][p]}")
+        if p == 41:
+            DROPPED.append((1, f"位置 {p} の {was}", "Esc は要らない（REQ-194 追記）。/ と - に置き換え"))
+        layers[1][p] = binding
+    # かなキーの長押しが KANA_HOLD_LAYER に入ることを確かめてから、BT 切り替えとシステム系キーを置く
+    kana = layers[0][38].split()
+    if kana[:2] != ["&lt", str(KANA_HOLD_LAYER)] or kana[2:] != ["LANG1"]:
+        raise SystemExit(f"かなキー（位置 38）の長押し先が L{KANA_HOLD_LAYER} ではない: {layers[0][38]}")
+    for p, binding in KANA_HOLD_SYSTEM.items():
+        if layers[KANA_HOLD_LAYER][p] != "&none":
+            raise SystemExit(f"L{KANA_HOLD_LAYER} の位置 {p} が空いていない: {layers[KANA_HOLD_LAYER][p]}")
+        layers[KANA_HOLD_LAYER][p] = binding
     return layers
+
+
+# コンボの待ち時間（REQ-194 判断点 (k) の決定）: .vil の 10000 ms は使わず、ZMK・Vial の標準の 50 ms にする
+COMBO_TIMEOUT_MS = 50
 
 
 def zmk_combos(vil, gen2_layers):
     """.vil のコンボを、レイヤー 0 の Gen2 位置に置き換える。"""
-    timeout = int(vil.get("settings", {}).get("2", 50))     # QMK 設定 2 = Combo time out
+    timeout = COMBO_TIMEOUT_MS               # .vil の QMK 設定 2（Combo time out）は 10000。判断点 (k) で短くした
     vl0 = vil["layout"][0]
     out = []
     for n, c in enumerate(vil.get("combo", [])):
@@ -440,16 +464,19 @@ TEMPLATE = r"""/*
  *
  * レイヤー: 0 Base(大西) / 1 Num / 2 Nav / 3 Fn / 4 Mouse / 5-7 空き（.vil の L7〜L9）/ 8 System
  *   - .vil の L5（QWERTY）と L6（別のカナ配列）は移さない（REQ-195 追記2）。後ろのレイヤーは 2 つずつ繰り上がる
- *   - 1 と 2 を同時に押すと 10 System（Gen2 標準の Num+Nav→System と同じ仕組み）
+ *   - 1 と 2 を同時に押すと 8 System（Gen2 標準の Num+Nav→System と同じ仕組み）。F1〜F15 とトラックパッドの速さ
  *   - トラックパッドの低速モードは shield 側で layer 1・2 に掛かる（Gen2 標準のまま）
  *   - 左下段の修飾キーは .vil どおり（L0 は ⌘・Opt・Ctrl、L1〜L4 は Ctrl・Opt・⌘）
- *   - 右下段は .vil どおり Esc。空いている中指・薬指に Delete・戻る（REQ-193 の仮置き）
+ *   - 右下段は .vil どおり（Base は Esc）。Delete・戻る の仮置きはしない（REQ-194 判断点 (e)）
+ *   - Num の右下段: Esc を外し、その位置に /、隣に -（REQ-194 追記）
+ *   - BT 切り替え: かな長押し（4 Mouse）の右手上段に BT 1〜5（BT_SEL 0〜4）、その下の段に
+ *     出力先切替・リセット・ブートローダー・BT 登録解除・全解除（REQ-195 追記3。System から移した）
  *   - 5方向スイッチ（L0〜L4）: 左右＝←→／⌘C・⌘V、上下＝輝度／音量（REQ-192・193）、押し込みは .vil どおり
  *   - トラックパッドのジェスチャーは macOS の作法（⌃←/⌃→・Mission Control など）
- *   - コンボ・マクロは .vil の定義どおり（Shift の親指＋? で !、M0）
+ *   - コンボ・マクロは .vil の定義どおり（Shift の親指＋? で !、M0）。コンボの待ち時間は 50 ms（判断点 (k)）
  *   - 接続先 OS で変わる割当（REQ-195）: Bluetooth プロファイル 4・5（BT_SEL 3・4）は Windows 用、
  *     1〜3 と USB は Mac 用。os_* の behavior（src/behaviors/behavior_os_morph.c）が押した瞬間に選ぶ。
- *     bindings の 1 番目が Mac 用（.vil どおり）、2 番目が Windows 用。System レイヤーに BT 5（BT_SEL 4）を追加
+ *     bindings の 1 番目が Mac 用（.vil どおり）、2 番目が Windows 用
  */
 
 #define ZMK_POINTING_DEFAULT_SCRL_VAL 120   /* smooth scrolling 有効時の推奨値 */
