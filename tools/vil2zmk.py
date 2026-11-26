@@ -204,7 +204,7 @@ SYSTEM = (
 
 LAYER_NAMES = [
     ("BASE", "Base"), ("NUM", "Num"), ("NAV", "Nav"), ("FUNC", "Fn"), ("MOUSE", "Mouse"),
-    ("L5", "QWERTY"), ("L6", "Kana2"), ("L7", "L7"), ("L8", "L8"), ("L9", "L9"), ("SYSTEM", "System"),
+    ("L5", "L5"), ("L6", "L6"), ("L7", "L7"), ("SYSTEM", "System"),
 ]
 
 ROWS = [list(range(0, 10)), list(range(10, 20)), list(range(20, 30)), list(range(30, 42)),
@@ -343,6 +343,11 @@ def apply_os(layers):
     return used_os, used_lt
 
 
+# .vil のレイヤーのうち Gen2 に移さないもの（REQ-195 追記2、2026-11-26 稜太の決定）
+#   5 = QWERTY、6 = 別のカナ配列。どちらも不要。後ろの空きレイヤー 7〜9 は 5〜7 に繰り上がり、System は 8 になる
+DROP_LAYERS = {5, 6}
+
+
 def main(vil_path, out_path):
     vil = json.load(open(vil_path, encoding="utf-8"))
     layers = vil["layout"]
@@ -351,11 +356,22 @@ def main(vil_path, out_path):
     if used_td or vil.get("key_override") or vil.get("alt_repeat_key"):
         raise SystemExit("tap_dance / key_override / alt_repeat_key に使用中のものがある。変換規則を足すこと")
 
+    # 使わないレイヤーを外し、後ろのレイヤーを繰り上げる（REQ-195 追記2: QWERTY の L5 とカナ配列の L6 は削除）
+    keep = [i for i in range(len(layers)) if i not in DROP_LAYERS]
+    new_index = {old: new for new, old in enumerate(keep)}
     all_layers = []
-    for i, vl in enumerate(layers):
-        b = gen2_layer(vl, enc, i)
+    for i in keep:
+        b = gen2_layer(layers[i], enc, i)
         tp = TP_BASE if i == 0 else TP_TRANS
         all_layers.append(b + tp)
+    for b in all_layers:                       # レイヤー番号を使う割当を付け替える
+        for p, binding in enumerate(b):
+            parts = binding.split()
+            if parts[0] in ("&lt", "&mo", "&to", "&tog") and parts[1].isdigit():
+                old = int(parts[1])
+                if old not in new_index:
+                    raise SystemExit(f"削除したレイヤー L{old} を使う割当が残っている: {binding}")
+                b[p] = " ".join([parts[0], str(new_index[old])] + parts[2:])
     apply_gen2(all_layers)
     all_layers.append(SYSTEM + TP_TRANS)
     combos = zmk_combos(vil, all_layers)
@@ -422,10 +438,11 @@ TEMPLATE = r"""/*
  *   python3 tools/vil2zmk.py docs/cornix_20261126.vil config/lalapadgen2.keymap
  *   python3 tools/gen_visualizer.py
  *
- * レイヤー: 0 Base(大西) / 1 Num / 2 Nav / 3 Fn / 4 Mouse / 5 QWERTY / 6 Kana2（別のカナ配列）/ 7-9 空き / 10 System
+ * レイヤー: 0 Base(大西) / 1 Num / 2 Nav / 3 Fn / 4 Mouse / 5-7 空き（.vil の L7〜L9）/ 8 System
+ *   - .vil の L5（QWERTY）と L6（別のカナ配列）は移さない（REQ-195 追記2）。後ろのレイヤーは 2 つずつ繰り上がる
  *   - 1 と 2 を同時に押すと 10 System（Gen2 標準の Num+Nav→System と同じ仕組み）
  *   - トラックパッドの低速モードは shield 側で layer 1・2 に掛かる（Gen2 標準のまま）
- *   - 左下段の修飾キーは .vil どおり（L0・L5・L6 は ⌘・Opt・Ctrl、L1〜L4 は Ctrl・Opt・⌘）
+ *   - 左下段の修飾キーは .vil どおり（L0 は ⌘・Opt・Ctrl、L1〜L4 は Ctrl・Opt・⌘）
  *   - 右下段は .vil どおり Esc。空いている中指・薬指に Delete・戻る（REQ-193 の仮置き）
  *   - 5方向スイッチ（L0〜L4）: 左右＝←→／⌘C・⌘V、上下＝輝度／音量（REQ-192・193）、押し込みは .vil どおり
  *   - トラックパッドのジェスチャーは macOS の作法（⌃←/⌃→・Mission Control など）
@@ -450,7 +467,7 @@ TEMPLATE = r"""/*
 #define NAV    2
 #define FUNC   3
 #define MOUSE  4
-#define SYSTEM 10
+#define SYSTEM 8
 
 /* 片手側のキー位置（Chordal Hold 相当の判定に使う） */
 #define KEYS_L 0 1 2 3 4 10 11 12 13 14 20 21 22 23 24
