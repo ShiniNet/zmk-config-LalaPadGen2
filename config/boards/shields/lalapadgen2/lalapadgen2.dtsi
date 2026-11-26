@@ -154,9 +154,9 @@
         track-remainders;
     };
 
-    /* トラックパッドの速さ（REQ-195 追記5、2026-11-26）: カーソルは速く（通常 1/4、低速 1/12）、
-       スクロールは遅く（通常 1/18、低速 1/60）。左右とも同じ値にしてある。
-       左右で変えたいときは listener_R と listener_L の scaler の値を別々に書く */
+    /* トラックパッドの速さ（REQ-195 追記5、2026-11-26）: 右は通常（カーソル 1/4、スクロール 1/18、
+       低速モードは 1/12・1/60）。左は低速（カーソル 1/12、スクロール 1/60、低速モードは 1/36・1/180）。
+       稜太の指示で左を低速にした。左右は listener_R / listener_L の scaler の値で別々に変えられる */
     trackpad_listener_R: trackpad_listener_R {
         compatible = "zmk,input-listener";
         status = "disabled";
@@ -180,15 +180,15 @@
         status = "disabled";
         device = <&trackpad_split_L>;
         input-processors = <&trackpad_key_behaviors_L>,
-                           <&zip_xy_scaler 1 4>,
-                           <&zip_scroll_scaler 1 18>,
+                           <&zip_xy_scaler 1 12>,
+                           <&zip_scroll_scaler 1 60>,
                            <&zip_dynamic_xy_scaler>,
                            <&zip_dynamic_scroll_scaler>;
         lowspeedmode {
             layers = <1>,<2>;
             input-processors =  <&trackpad_key_behaviors_L>,
-                                <&zip_xy_scaler 1 12>,
-                                <&zip_scroll_scaler 1 60>,
+                                <&zip_xy_scaler 1 36>,
+                                <&zip_scroll_scaler 1 180>,
                                 <&zip_dynamic_xy_scaler>,
                                 <&zip_dynamic_scroll_scaler>;
         };
