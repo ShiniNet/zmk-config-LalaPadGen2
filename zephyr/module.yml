@@ -1,3 +1,9 @@
+# このリポジトリ自体を Zephyr モジュールとして読み込ませる（ZMK の build-user-config が ZMK_EXTRA_MODULES に渡す）。
+#   board_root: boards/ の Gen2 ボード定義（ShiniNet 版のまま）
+#   cmake / kconfig / dts_root: 接続先 OS で割当を切り替える behavior（REQ-195、src/behaviors/behavior_os_morph.c）
 build:
+  cmake: .
+  kconfig: Kconfig
   settings:
     board_root: .
+    dts_root: .
