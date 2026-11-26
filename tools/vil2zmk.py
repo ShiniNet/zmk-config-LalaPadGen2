@@ -367,6 +367,37 @@ def apply_mod_morphs(layers):
     return used
 
 
+# ---- レイヤー間の切替（REQ-195 追記6、2026-11-27 稜太の指示）--------------------------------
+# 従来はレイヤーへは Base から長押しでしか行けず、Num から Nav へ直接は移れなかった
+# （両方長押しすると System になる）。Num / Nav / Fn / Mouse の親指のレイヤーキー位置では、
+# 「押すとそのレイヤーへ切り替わる」(&to) にする。自分のレイヤーのキー位置は Base へ戻る。
+#   位置: 33 = Fn（英数キー）、35 = Num（Enter キー）、36 = Nav（BS キー）、38 = Mouse（かなキー）
+#   Num の 33・38 は英数・かなのタップが要るので長押しのまま（Fn・Mouse は長押しで届く）
+LAYER_SWITCHES = {
+    1: {35: "&to 0", 36: "&to 2"},
+    2: {35: "&to 1", 36: "&to 0"},
+    3: {33: "&to 0", 35: "&to 1", 36: "&to 2", 38: "&to 4"},
+    4: {33: "&to 3", 35: "&to 1", 36: "&to 2", 38: "&to 0"},
+}
+LAYER_SWITCH_EXPECTED = {
+    (1, 35): "&none", (1, 36): "&lt 2 BSPC",
+    (2, 35): "&lt 1 ENTER", (2, 36): "&none",
+    (3, 33): "&none", (3, 35): "&lt 1 ENTER", (3, 36): "&lt 2 BSPC", (3, 38): "&lt_kana 4 0",
+    (4, 33): "&none", (4, 35): "&lt 1 ENTER", (4, 36): "&lt 2 BSPC", (4, 38): "&none",
+}
+
+
+def apply_layer_switches(layers):
+    """親指のレイヤーキー位置を &to（切替）に置き換える。想定と違う割当があったら止める。"""
+    for li, sw in LAYER_SWITCHES.items():
+        for pos, to in sw.items():
+            cur = layers[li][pos]
+            exp = LAYER_SWITCH_EXPECTED[(li, pos)]
+            if cur != exp:
+                raise SystemExit(f"レイヤー切替の想定が違う: L{li} 位置{pos} は {cur}（想定 {exp}）")
+            layers[li][pos] = to
+
+
 def apply_os(layers):
     """Mac の割当のうち Windows で変わるものを os-morph に置き換える。使った os-morph の名前を返す。"""
     used_os, used_lt = set(), set()
@@ -425,6 +456,7 @@ def main(vil_path, out_path):
     macros = zmk_macros(vil)
     used_os, used_lt = apply_os(all_layers)
     used_mm = apply_mod_morphs(all_layers)
+    apply_layer_switches(all_layers)
 
     blocks = []
     for (node, disp), b in zip(LAYER_NAMES, all_layers):
@@ -507,6 +539,9 @@ TEMPLATE = r"""/*
  *   - トラックパッドのジェスチャーは macOS の作法（⌃←/⌃→・Mission Control など）
  *   - コンボ・マクロは .vil の定義どおり（Shift の親指＋? で !、M0）。コンボの待ち時間は 50 ms（判断点 (k)）
  *   - ？ のキーは mod-morph でも変換する（シフトを保持したまま ？ を押しても ！、REQ-195 追記5）
+ *   - レイヤー間の切替（REQ-195 追記6）: Num / Nav / Fn / Mouse では親指のレイヤーキー位置が &to（切替）。
+ *     他のレイヤーのキー位置を押すとそのレイヤーへ移り、自分のキー位置を押すと Base へ戻る。
+ *     Num の英数・かな位置だけは長押しのまま（タップが要るため）。System は従来どおり Base で両長押し
  *   - 接続先 OS で変わる割当（REQ-195）: Bluetooth プロファイル 4・5（BT_SEL 3・4）と USB は Windows 用、
  *     Bluetooth プロファイル 1〜3 とどこにも接続していないときは Mac 用（USB は追記4）。os_* の behavior（src/behaviors/behavior_os_morph.c）が押した瞬間に選ぶ。
  *     bindings の 1 番目が Mac 用（.vil どおり）、2 番目が Windows 用

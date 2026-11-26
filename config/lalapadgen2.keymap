@@ -19,6 +19,9 @@
  *   - トラックパッドのジェスチャーは macOS の作法（⌃←/⌃→・Mission Control など）
  *   - コンボ・マクロは .vil の定義どおり（Shift の親指＋? で !、M0）。コンボの待ち時間は 50 ms（判断点 (k)）
  *   - ？ のキーは mod-morph でも変換する（シフトを保持したまま ？ を押しても ！、REQ-195 追記5）
+ *   - レイヤー間の切替（REQ-195 追記6）: Num / Nav / Fn / Mouse では親指のレイヤーキー位置が &to（切替）。
+ *     他のレイヤーのキー位置を押すとそのレイヤーへ移り、自分のキー位置を押すと Base へ戻る。
+ *     Num の英数・かな位置だけは長押しのまま（タップが要るため）。System は従来どおり Base で両長押し
  *   - 接続先 OS で変わる割当（REQ-195）: Bluetooth プロファイル 4・5（BT_SEL 3・4）と USB は Windows 用、
  *     Bluetooth プロファイル 1〜3 とどこにも接続していないときは Mac 用（USB は追記4）。os_* の behavior（src/behaviors/behavior_os_morph.c）が押した瞬間に選ぶ。
  *     bindings の 1 番目が Mac 用（.vil どおり）、2 番目が Windows 用
@@ -282,7 +285,7 @@
 &kp LS(INTERNATIONAL_1)  &kp LS(COMMA)            &kp LS(DOT)              &kp COMMA                &kp DOT                                                                  &kp SLASH                &kp KP_N7                &kp KP_N8                &kp KP_N9                &kp KP_PLUS
 &kp SLASH                &kp LS(N6)               &kp LBKT                 &kp LS(N8)               &kp LS(N9)                                                               &kp SQT                  &kp KP_N4                &kp KP_N5                &kp KP_N6                &kp KP_MINUS
 &none                    &kp LS(N5)               &kp LS(MINUS)            &kp RBKT                 &kp NON_US_HASH                                                          &kp KP_N0                &kp KP_N1                &kp KP_N2                &kp KP_N3                &kp KP_MULTIPLY
-&os_ctrl                 &kp LALT                 &os_cmd                  &lt_eisu 3 0             &ht_l LSHIFT SPACE       &none                    &lt 2 BSPC               &ht_r RSHIFT TAB         &lt_kana 4 0             &kp KP_DOT               &kp KP_MINUS             &kp KP_DIVIDE
+&os_ctrl                 &kp LALT                 &os_cmd                  &lt_eisu 3 0             &ht_l LSHIFT SPACE       &to 0                    &to 2                    &ht_r RSHIFT TAB         &lt_kana 4 0             &kp KP_DOT               &kp KP_MINUS             &kp KP_DIVIDE
                          &none                    &kp RIGHT                &kp C_BRI_DN             &kp LEFT                 &kp C_BRI_UP             &kp C_VOL_UP             &os_copy                 &kp C_VOL_DN             &os_paste                &kp C_MUTE
 &trans                   &trans                   &trans                                                                                                                                                                                                                     &trans                   &trans                   &trans
 &trans                   &trans                   &trans                   &trans                   &trans                                                                   &trans                   &trans                   &trans                   &trans                   &trans
@@ -295,7 +298,7 @@
 &kp HOME            &kp PG_UP           &kp UP              &kp PG_DN           &kp END                                                   &kp HOME            &kp PG_UP           &kp UP              &kp PG_DN           &kp END
 &none               &kp LEFT            &kp DOWN            &kp RIGHT           &none                                                     &none               &kp LEFT            &kp DOWN            &kp RIGHT           &none
 &os_undo            &os_cut             &os_copy            &os_paste           &os_redo                                                  &os_undo            &os_cut             &os_copy            &os_paste           &os_redo
-&os_ctrl            &kp LALT            &os_cmd             &lt_eisu 3 0        &ht_l LSHIFT SPACE  &lt 1 ENTER         &none               &ht_r RSHIFT TAB    &lt_kana 4 0        &none               &none               &kp ESC
+&os_ctrl            &kp LALT            &os_cmd             &lt_eisu 3 0        &ht_l LSHIFT SPACE  &to 1               &to 0               &ht_r RSHIFT TAB    &lt_kana 4 0        &none               &none               &kp ESC
                     &none               &kp RIGHT           &kp C_BRI_DN        &kp LEFT            &kp C_BRI_UP        &kp C_VOL_UP        &os_copy            &kp C_VOL_DN        &os_paste           &kp C_MUTE
 &trans              &trans              &trans                                                                                                                                                                        &trans              &trans              &trans
 &trans              &trans              &trans              &trans              &trans                                                    &trans              &trans              &trans              &trans              &trans
@@ -308,7 +311,7 @@
 &kp F1              &kp F2              &kp F3              &kp F4              &kp F5                                                    &kp F1              &kp F2              &kp F3              &kp F4              &kp F5
 &kp F6              &kp F7              &kp F8              &kp F9              &kp F10                                                   &kp F6              &kp F7              &kp F8              &kp F9              &kp F10
 &kp F11             &kp F12             &none               &none               &none                                                     &kp F11             &kp F12             &none               &none               &none
-&os_ctrl            &kp LALT            &os_cmd             &none               &ht_l LSHIFT SPACE  &lt 1 ENTER         &lt 2 BSPC          &ht_r RSHIFT TAB    &lt_kana 4 0        &none               &none               &kp ESC
+&os_ctrl            &kp LALT            &os_cmd             &to 0               &ht_l LSHIFT SPACE  &to 1               &to 2               &ht_r RSHIFT TAB    &to 4               &none               &none               &kp ESC
                     &none               &kp RIGHT           &kp C_BRI_DN        &kp LEFT            &kp C_BRI_UP        &kp C_VOL_UP        &os_copy            &kp C_VOL_DN        &os_paste           &kp C_MUTE
 &trans              &trans              &trans                                                                                                                                                                        &trans              &trans              &trans
 &trans              &trans              &trans              &trans              &trans                                                    &trans              &trans              &trans              &trans              &trans
@@ -321,7 +324,7 @@
 &none               &none               &none               &none               &none                                                     &bt BT_SEL 0        &bt BT_SEL 1        &bt BT_SEL 2        &bt BT_SEL 3        &bt BT_SEL 4
 &none               &none               &none               &none               &none                                                     &out OUT_TOG        &sys_reset          &bootloader         &bt BT_CLR          &bt BT_CLR_ALL
 &none               &none               &none               &none               &none                                                     &none               &none               &none               &none               &none
-&os_ctrl            &kp LALT            &os_cmd             &none               &ht_l LSHIFT SPACE  &lt 1 ENTER         &lt 2 BSPC          &none               &none               &none               &none               &kp ESC
+&os_ctrl            &kp LALT            &os_cmd             &to 3               &ht_l LSHIFT SPACE  &to 1               &to 2               &none               &to 0               &none               &none               &kp ESC
                     &none               &kp RIGHT           &kp C_BRI_DN        &kp LEFT            &kp C_BRI_UP        &kp C_VOL_UP        &os_copy            &kp C_VOL_DN        &os_paste           &kp C_MUTE
 &trans              &trans              &trans                                                                                                                                                                        &trans              &trans              &trans
 &trans              &trans              &trans              &trans              &trans                                                    &trans              &trans              &trans              &trans              &trans
