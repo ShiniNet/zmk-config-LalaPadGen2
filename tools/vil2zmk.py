@@ -318,7 +318,7 @@ def zmk_macros(vil):
 
 
 # ---- 接続先 OS で変わる割当（REQ-195）----------------------------------------------------------
-# Bluetooth プロファイル 4・5（ZMK の BT_SEL 3・4）は Windows 用、1〜3 と USB は Mac 用。
+# Bluetooth プロファイル 4・5（ZMK の BT_SEL 3・4）と USB は Windows 用、1〜3 と未接続は Mac 用（USB は REQ-195 追記4）。
 # .vil 由来の Mac の割当のうち、Windows で意味が変わるものを os-morph（src/behaviors/behavior_os_morph.c）に包む。
 # 修飾キーの物理位置は変えず、送るキーコードを変える（⌘ の位置は Windows では Ctrl、Ctrl の位置は Win キー）。
 #   (Mac の割当, Windows の割当, os-morph の名前, 説明)
@@ -474,8 +474,8 @@ TEMPLATE = r"""/*
  *   - 5方向スイッチ（L0〜L4）: 左右＝←→／⌘C・⌘V、上下＝輝度／音量（REQ-192・193）、押し込みは .vil どおり
  *   - トラックパッドのジェスチャーは macOS の作法（⌃←/⌃→・Mission Control など）
  *   - コンボ・マクロは .vil の定義どおり（Shift の親指＋? で !、M0）。コンボの待ち時間は 50 ms（判断点 (k)）
- *   - 接続先 OS で変わる割当（REQ-195）: Bluetooth プロファイル 4・5（BT_SEL 3・4）は Windows 用、
- *     1〜3 と USB は Mac 用。os_* の behavior（src/behaviors/behavior_os_morph.c）が押した瞬間に選ぶ。
+ *   - 接続先 OS で変わる割当（REQ-195）: Bluetooth プロファイル 4・5（BT_SEL 3・4）と USB は Windows 用、
+ *     Bluetooth プロファイル 1〜3 とどこにも接続していないときは Mac 用（USB は追記4）。os_* の behavior（src/behaviors/behavior_os_morph.c）が押した瞬間に選ぶ。
  *     bindings の 1 番目が Mac 用（.vil どおり）、2 番目が Windows 用
  */
 

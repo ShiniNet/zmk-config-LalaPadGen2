@@ -108,13 +108,13 @@
   <header>
     <div>
       <h1>LaLapad Gen2 大西配列キーマップ</h1>
-      <div class="subtitle">config/lalapadgen2.keymap から生成。実機のカラムスタッガード（列ごとの縦ずれ）で表示。文字は JIS 入力として表示（小さい字は ZMK のキー名）。接続先が Windows（Bluetooth プロファイル 4・5）のときの割当は「Windows」に切り替えて見る。紫の枠＝Mac と割当が違うキー。</div>
+      <div class="subtitle">config/lalapadgen2.keymap から生成。実機のカラムスタッガード（列ごとの縦ずれ）で表示。文字は JIS 入力として表示（小さい字は ZMK のキー名）。接続先が Windows（Bluetooth プロファイル 4・5、USB）のときの割当は「Windows」に切り替えて見る。紫の枠＝Mac と割当が違うキー。</div>
     </div>
     <div class="meta" id="meta"></div>
   </header>
   <div class="ostoggle" id="ostoggle"></div>
   <nav class="tabs" id="tabs"></nav>
-  <p class="note" style="margin:-6px 0 12px">変更（最終版、2026-11-26）: ① BT 切り替えは <b>かな長押し（L4 Mouse）</b>へ移した。右手の上段に左から BT 1〜5、その下の段に出力先切替・再起動・書込モード・BT 登録解除・BT 全解除。System（L8）には F キーとトラックパッドの速さだけを残した。② .vil の L5（QWERTY）と L6（別のカナ配列）を削除し、後ろのレイヤーを繰り上げた（空きの L7〜L9 → L5〜L7、System は L10 → L8）。③ Num の右下段は Esc をやめて、その位置に ／、隣に −。④ 右下段の Delete・戻る の仮置きをやめた。⑤ コンボの待ち時間を 10000 ms → 50 ms に短くした。</p>
+  <p class="note" style="margin:-6px 0 12px">変更（最終版、2026-11-26）: ① BT 切り替えは <b>かな長押し（L4 Mouse）</b>へ移した。右手の上段に左から BT 1〜5、その下の段に出力先切替・再起動・書込モード・BT 登録解除・BT 全解除。System（L8）には F キーとトラックパッドの速さだけを残した。② .vil の L5（QWERTY）と L6（別のカナ配列）を削除し、後ろのレイヤーを繰り上げた（空きの L7〜L9 → L5〜L7、System は L10 → L8）。③ Num の右下段は Esc をやめて、その位置に ／、隣に −。④ 右下段の Delete・戻る の仮置きをやめた。⑤ コンボの待ち時間を 10000 ms → 50 ms に短くした。⑥ USB でつないでいるあいだは Windows の割当にした（REQ-195 追記4。Bluetooth は 4・5 が Windows、1〜3 と未接続は Mac のまま）。</p>
   <section class="summary">
     <div class="box"><span class="t">レイヤー</span><div class="m" id="layerTitle"></div></div>
     <div class="box"><span class="t">出し方</span><div class="m" id="layerTrigger"></div></div>
@@ -379,10 +379,10 @@ function render() {
     const place = FIVE.has(pos) ? "5方向 " + FIVE_NAMES[pos] : DATA.trackpad[pos] ? "パッド" + (DATA.trackpad[pos].side === "L" ? "左" : "右") + " " + (TPN[DATA.trackpad[pos].gesture] || DATA.trackpad[pos].gesture) : "位置 " + pos;
     rowsOs.push(`<tr><td>${place}</td><td>${dm.tap || "なし"}</td><td>${dw.tap || "なし"}</td></tr>`);
   }
-  ot.innerHTML = rowsOs.length ? "<tr><th>場所</th><th>Mac（BT 1〜3・USB）</th><th>Windows（BT " + (DATA.win_profiles || []).join("・") + "）</th></tr>" + rowsOs.join("")
+  ot.innerHTML = rowsOs.length ? "<tr><th>場所</th><th>" + osLabel("mac") + "</th><th>" + osLabel("win") + "</th></tr>" + rowsOs.join("")
                                : "<tr><td>このレイヤーでは違いなし</td></tr>";
   document.getElementById("osNote").textContent =
-    "Bluetooth のプロファイル " + (DATA.win_profiles || []).join("・") + " に接続しているあいだは Windows 用、それ以外（プロファイル 1〜3、USB）は Mac 用。キーを押した瞬間の接続先で決まる。修飾キーは物理位置を変えず、⌘ の位置が Ctrl、Ctrl の位置が Win キーになる。英数・かなは 無変換・変換（MS-IME で「無変換＝IME オフ、変換＝IME オン」の設定が要る）。";
+    (DATA.usb_win ? "USB でつないでいるあいだと、" : "") + "Bluetooth のプロファイル " + (DATA.win_profiles || []).join("・") + " に接続しているあいだは Windows 用、それ以外（プロファイル 1〜3、" + (DATA.usb_win ? "" : "USB、") + "どこにも接続していないとき）は Mac 用。" + (DATA.usb_win ? "USB は Mac につないでも Windows 用になる（Mac にケーブルをつないだまま Mac 用で使うときは、かな長押しの「USB/BT 切替」で出力を Bluetooth に切り替える）。" : "") + "キーを押した瞬間の接続先で決まる。修飾キーは物理位置を変えず、⌘ の位置が Ctrl、Ctrl の位置が Win キーになる。英数・かなは 無変換・変換（MS-IME で「無変換＝IME オフ、変換＝IME オン」の設定が要る）。";
 
   const mt = document.getElementById("macroTable");
   const ms = Object.entries(DATA.macros || {});
@@ -407,12 +407,20 @@ function render() {
   }).join("");
 }
 
+// 接続先ボタンと表の見出し。Windows になる条件は BT のプロファイル（win_profiles）と USB（usb_win、REQ-195 追記4）
+function osLabel(os) {
+  const win = DATA.win_profiles || [];
+  const mac = [1, 2, 3, 4, 5].filter(n => !win.includes(n));
+  const list = a => a.length > 2 && a[a.length - 1] - a[0] === a.length - 1 ? a[0] + "〜" + a[a.length - 1] : a.join("・");
+  return os === "mac" ? "Mac（BT " + list(mac) + (DATA.usb_win ? "" : "・USB") + "）"
+                      : "Windows（BT " + list(win) + (DATA.usb_win ? "・USB" : "") + "）";
+}
+
 function renderOsToggle() {
   const box = document.getElementById("ostoggle");
-  const prof = (DATA.win_profiles || []).join("・");
   box.innerHTML = `<span class="lab">接続先</span>` +
-    `<button class="osbtn mac" aria-pressed="${OS === "mac"}" data-os="mac">Mac（BT 1〜3・USB）</button>` +
-    `<button class="osbtn win" aria-pressed="${OS === "win"}" data-os="win">Windows（BT ${prof}）</button>`;
+    `<button class="osbtn mac" aria-pressed="${OS === "mac"}" data-os="mac">${osLabel("mac")}</button>` +
+    `<button class="osbtn win" aria-pressed="${OS === "win"}" data-os="win">${osLabel("win")}</button>`;
   box.querySelectorAll("button").forEach(b => b.onclick = () => { OS = b.dataset.os; renderOsToggle(); render(); });
 }
 

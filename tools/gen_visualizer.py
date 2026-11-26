@@ -210,6 +210,16 @@ def build_geometry():
     }
 
 
+def usb_is_windows():
+    """USB 接続を Windows として扱うか（REQ-195 追記4）。Kconfig の既定値か、shield の .conf の設定値。"""
+    for f in (ROOT / "config" / "boards" / "shields" / "lalapadgen2").glob("*.conf"):
+        m = re.search(r"^CONFIG_ZMK_BEHAVIOR_OS_MORPH_USB_IS_WINDOWS\s*=\s*(\w+)", f.read_text(encoding="utf-8"), flags=re.M)
+        if m:
+            return m.group(1) == "y"
+    m = re.search(r"config ZMK_BEHAVIOR_OS_MORPH_USB_IS_WINDOWS.*?default\s+(\w+)", (ROOT / "Kconfig").read_text(encoding="utf-8"), flags=re.S)
+    return bool(m) and m.group(1) == "y"
+
+
 def win_profiles():
     """Windows として扱う Bluetooth プロファイル（1 始まり）。Kconfig の既定値か、shield の .conf の設定値。"""
     mask = None
@@ -258,6 +268,7 @@ def main():
         "layers_win": layers_win,
         "os_morphs": os_morphs,
         "win_profiles": win_profiles(),
+        "usb_win": usb_is_windows(),
         "physical": phys,
         "geometry": build_geometry(),
         "trackpad": parse_trackpad_positions(),
