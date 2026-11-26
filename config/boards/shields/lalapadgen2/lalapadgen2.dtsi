@@ -154,20 +154,23 @@
         track-remainders;
     };
 
+    /* トラックパッドの速さ（REQ-195 追記5、2026-11-26）: カーソルは速く（通常 1/4、低速 1/12）、
+       スクロールは遅く（通常 1/18、低速 1/60）。左右とも同じ値にしてある。
+       左右で変えたいときは listener_R と listener_L の scaler の値を別々に書く */
     trackpad_listener_R: trackpad_listener_R {
         compatible = "zmk,input-listener";
         status = "disabled";
         device = <&trackpad_split_R>;
         input-processors = <&trackpad_key_behaviors_R>,
-                           <&zip_xy_scaler 1 5>,
-                           <&zip_scroll_scaler 1 12>,
+                           <&zip_xy_scaler 1 4>,
+                           <&zip_scroll_scaler 1 18>,
                            <&zip_dynamic_xy_scaler>,
                            <&zip_dynamic_scroll_scaler>;
         lowspeedmode {
             layers = <1>,<2>;
             input-processors =  <&trackpad_key_behaviors_R>,
-                                <&zip_xy_scaler 1 15>,
-                                <&zip_scroll_scaler 1 40>,
+                                <&zip_xy_scaler 1 12>,
+                                <&zip_scroll_scaler 1 60>,
                                 <&zip_dynamic_xy_scaler>,
                                 <&zip_dynamic_scroll_scaler>;
         };
@@ -177,15 +180,15 @@
         status = "disabled";
         device = <&trackpad_split_L>;
         input-processors = <&trackpad_key_behaviors_L>,
-                           <&zip_xy_scaler 1 5>,
-                           <&zip_scroll_scaler 1 12>,
+                           <&zip_xy_scaler 1 4>,
+                           <&zip_scroll_scaler 1 18>,
                            <&zip_dynamic_xy_scaler>,
                            <&zip_dynamic_scroll_scaler>;
         lowspeedmode {
             layers = <1>,<2>;
             input-processors =  <&trackpad_key_behaviors_L>,
-                                <&zip_xy_scaler 1 15>,
-                                <&zip_scroll_scaler 1 40>,
+                                <&zip_xy_scaler 1 12>,
+                                <&zip_scroll_scaler 1 60>,
                                 <&zip_dynamic_xy_scaler>,
                                 <&zip_dynamic_scroll_scaler>;
         };

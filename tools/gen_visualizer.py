@@ -113,7 +113,13 @@ def parse_keymap(text):
         b = re.search(r"bindings\s*=\s*<(.*?)>\s*,\s*<(.*?)>;", m.group(2), flags=re.S)
         os_morphs[m.group(1)] = {"mac": "&" + " ".join(b.group(1).strip().lstrip("&").split()),
                                  "win": "&" + " ".join(b.group(2).strip().lstrip("&").split())}
-    return layers, combos, conds, behaviors, macros, os_morphs
+    # シフト中だけ割当が変わる behavior（mod-morph、REQ-195 追記5）: bindings = <通常>, <シフト中>
+    mod_morphs = {}
+    for m in re.finditer(r"(\w+):\s*\w+\s*\{\s*compatible\s*=\s*\"zmk,behavior-mod-morph\";(.*?)\};", s, flags=re.S):
+        b = re.search(r"bindings\s*=\s*<(.*?)>\s*,\s*<(.*?)>;", m.group(2), flags=re.S)
+        mod_morphs[m.group(1)] = {"normal": "&" + " ".join(b.group(1).strip().lstrip("&").split()),
+                                  "shifted": "&" + " ".join(b.group(2).strip().lstrip("&").split())}
+    return layers, combos, conds, behaviors, macros, os_morphs, mod_morphs
 
 
 def expand_os(binding, os_name, behaviors, os_morphs):
@@ -127,6 +133,14 @@ def expand_os(binding, os_name, behaviors, os_morphs):
         tap = os_morphs[ht["tap"]][os_name].split()
         assert tap[0] == "&kp", tap
         return f"&lt {p[1]} {tap[1]}"
+    return binding
+
+
+def expand_mm(binding, mod_morphs):
+    """mod-morph は表示用に通常時の割当へ展開する（シフト中の割当は DATA の mod_morphs に残す）。"""
+    beh = binding.split()[0][1:]
+    if beh in mod_morphs:
+        return mod_morphs[beh]["normal"]
     return binding
 
 
@@ -249,11 +263,11 @@ def main():
     args = ap.parse_args()
 
     text = KEYMAP.read_text(encoding="utf-8")
-    layers, combos, conds, behaviors, macros, os_morphs = parse_keymap(text)
+    layers, combos, conds, behaviors, macros, os_morphs, mod_morphs = parse_keymap(text)
     raw = [dict(L, bindings=list(L["bindings"])) for L in layers]
-    layers_win = [dict(L, bindings=[expand_os(b, "win", behaviors, os_morphs) for b in L["bindings"]]) for L in raw]
+    layers_win = [dict(L, bindings=[expand_mm(expand_os(b, "win", behaviors, os_morphs), mod_morphs) for b in L["bindings"]]) for L in raw]
     for L in layers:
-        L["bindings"] = [expand_os(b, "mac", behaviors, os_morphs) for b in L["bindings"]]
+        L["bindings"] = [expand_mm(expand_os(b, "mac", behaviors, os_morphs), mod_morphs) for b in L["bindings"]]
     phys = parse_physical()
     for L in layers:
         if len(L["bindings"]) != len(phys):
@@ -267,6 +281,7 @@ def main():
         "macros": macros,
         "layers_win": layers_win,
         "os_morphs": os_morphs,
+        "mod_morphs": mod_morphs,
         "win_profiles": win_profiles(),
         "usb_win": usb_is_windows(),
         "physical": phys,

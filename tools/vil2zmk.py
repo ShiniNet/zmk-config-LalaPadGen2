@@ -344,6 +344,29 @@ OS_BY_MAC = {mac: (win, name, note) for mac, win, name, note in OS_MORPHS}
 OS_LT = {"LANG2": "eisu", "LANG1": "kana"}
 
 
+# ---- シフト中だけ割当が変わるキー（REQ-195 追記5、2026-11-26）--------------------------------
+# .vil のコンボ（親指シフト＋？→！）は同時押しでしか発動せず、シフトを保持してから ？ を押す
+# 操作では変換されなかった（実機で確認）。ZMK 標準の mod-morph（zmk,behavior-mod-morph）で
+# キー単体でも吸収する。コンボは従来どおり残す（同時押しでも ！ になる）。
+#   (通常の割当, シフト中の割当, mod-morph の名前, 説明)
+MOD_MORPHS = [
+    ("&kp LS(SLASH)", "&kp LS(N1)", "mm_q", "？（Shift＋/）→ シフト中は ！（Shift＋1）"),
+]
+MOD_BY_NORMAL = {n: (sh, name, note) for n, sh, name, note in MOD_MORPHS}
+
+
+def apply_mod_morphs(layers):
+    """通常の割当を mod-morph に置き換える。使った mod-morph の名前を返す。"""
+    used = set()
+    for b in layers:
+        for p, binding in enumerate(b):
+            if binding in MOD_BY_NORMAL:
+                _, name, _ = MOD_BY_NORMAL[binding]
+                b[p] = "&" + name
+                used.add(name)
+    return used
+
+
 def apply_os(layers):
     """Mac の割当のうち Windows で変わるものを os-morph に置き換える。使った os-morph の名前を返す。"""
     used_os, used_lt = set(), set()
@@ -401,6 +424,7 @@ def main(vil_path, out_path):
     combos = zmk_combos(vil, all_layers)
     macros = zmk_macros(vil)
     used_os, used_lt = apply_os(all_layers)
+    used_mm = apply_mod_morphs(all_layers)
 
     blocks = []
     for (node, disp), b in zip(LAYER_NAMES, all_layers):
@@ -445,11 +469,19 @@ def main(vil_path, out_path):
         f"            require-prior-idle-ms = <120>;\n"
         f"            bindings = <&mo>, <&os_{key}>;\n"
         f"        }};\n" for key in sorted(used_lt))
+    mm_txt = "".join(
+        f"\n        /* {note} */\n"
+        f"        {name}: {name} {{\n"
+        f"            compatible = \"zmk,behavior-mod-morph\";\n"
+        f"            #binding-cells = <0>;\n"
+        f"            bindings = <{normal}>, <{shifted}>;\n"
+        f"            mods = <(MOD_LSFT|MOD_RSFT)>;\n"
+        f"        }};\n" for normal, shifted, name, note in MOD_MORPHS if name in used_mm)
     text = (TEMPLATE.replace("@@LAYERS@@", "\n\n".join(blocks))
-            .replace("@@MACROS@@", macro_txt + os_txt + lt_txt).replace("@@COMBOS@@", combo_txt))
+            .replace("@@MACROS@@", macro_txt + os_txt + mm_txt + lt_txt).replace("@@COMBOS@@", combo_txt))
     open(out_path, "w", encoding="utf-8").write(text)
     print(f"wrote {out_path}: {len(all_layers)} layers, {len(combos)} combos, {len(macros)} macros, "
-          f"{len(used_os)} os-morphs, {len(used_lt)} os layer-taps")
+          f"{len(used_os)} os-morphs, {len(used_lt)} os layer-taps, {len(used_mm)} mod-morphs")
     for i, what, why in DROPPED:
         print(f"  置かなかった: L{i} {what}（{why}）")
 
@@ -474,6 +506,7 @@ TEMPLATE = r"""/*
  *   - 5方向スイッチ（L0〜L4）: 左右＝←→／⌘C・⌘V、上下＝輝度／音量（REQ-192・193）、押し込みは .vil どおり
  *   - トラックパッドのジェスチャーは macOS の作法（⌃←/⌃→・Mission Control など）
  *   - コンボ・マクロは .vil の定義どおり（Shift の親指＋? で !、M0）。コンボの待ち時間は 50 ms（判断点 (k)）
+ *   - ？ のキーは mod-morph でも変換する（シフトを保持したまま ？ を押しても ！、REQ-195 追記5）
  *   - 接続先 OS で変わる割当（REQ-195）: Bluetooth プロファイル 4・5（BT_SEL 3・4）と USB は Windows 用、
  *     Bluetooth プロファイル 1〜3 とどこにも接続していないときは Mac 用（USB は追記4）。os_* の behavior（src/behaviors/behavior_os_morph.c）が押した瞬間に選ぶ。
  *     bindings の 1 番目が Mac 用（.vil どおり）、2 番目が Windows 用
@@ -486,6 +519,7 @@ TEMPLATE = r"""/*
 #include <behaviors.dtsi>
 #include <dt-bindings/zmk/bt.h>
 #include <dt-bindings/zmk/keys.h>
+#include <dt-bindings/zmk/modifiers.h>
 #include <dt-bindings/zmk/outputs.h>
 #include <dt-bindings/zmk/pointing.h>
 
