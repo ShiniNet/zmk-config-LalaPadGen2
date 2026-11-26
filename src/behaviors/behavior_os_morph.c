@@ -4,8 +4,12 @@
  *   bindings = <Mac 用>, <Windows 用>;
  *
  * キーを押した瞬間に、いま選ばれている接続先（ZMK の endpoint）を見て、どちらを押すか決める。
- *   - Bluetooth で、プロファイル番号が CONFIG_ZMK_BEHAVIOR_OS_MORPH_WIN_PROFILES に含まれる → Windows 用
- *   - それ以外（Bluetooth のプロファイル 1〜3、USB）→ Mac 用
+ *   - USB（ホストが HID として認識している）→ Windows 用（REQ-195 追記4。CONFIG_ZMK_BEHAVIOR_OS_MORPH_USB_IS_WINDOWS）
+ *   - Bluetooth で、選んでいるプロファイルが接続中、かつ番号が CONFIG_ZMK_BEHAVIOR_OS_MORPH_WIN_PROFILES に
+ *     含まれる → Windows 用
+ *   - それ以外（Bluetooth のプロファイル 1〜3、どこにも接続していないとき）→ Mac 用
+ *     ZMK v0.3 は、どこにも接続していないとき endpoint を「Bluetooth・選択中のプロファイル」と返すので、
+ *     Bluetooth 側は接続中かどうかも見る。USB は給電だけ（HID でない）なら endpoint に選ばれない
  * 押したときに選んだ割当を位置ごとに覚えておき、離すときは同じ割当を離す
  * （押している途中で接続先が変わっても、押しっぱなしのキーが残らない）。
  *
@@ -19,6 +23,12 @@
 #include <zephyr/logging/log.h>
 #include <zmk/behavior.h>
 #include <zmk/endpoints.h>
+#if IS_ENABLED(CONFIG_ZMK_USB)
+#include <zmk/usb.h>
+#endif
+#if IS_ENABLED(CONFIG_ZMK_BLE)
+#include <zmk/ble.h>
+#endif
 
 LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
@@ -44,13 +54,28 @@ struct behavior_os_morph_data {
 static bool os_morph_use_windows(void) {
     struct zmk_endpoint_instance ep = zmk_endpoints_selected();
 
-    if (ep.transport != ZMK_TRANSPORT_BLE) {
+    switch (ep.transport) {
+    case ZMK_TRANSPORT_USB:
+#if IS_ENABLED(CONFIG_ZMK_USB) && IS_ENABLED(CONFIG_ZMK_BEHAVIOR_OS_MORPH_USB_IS_WINDOWS)
+        return zmk_usb_is_hid_ready();
+#else
+        return false;
+#endif
+    case ZMK_TRANSPORT_BLE:
+#if IS_ENABLED(CONFIG_ZMK_BLE)
+        if (!zmk_ble_active_profile_is_connected()) {
+            return false;
+        }
+        if (ep.ble.profile_index < 0 || ep.ble.profile_index >= 32) {
+            return false;
+        }
+        return (CONFIG_ZMK_BEHAVIOR_OS_MORPH_WIN_PROFILES >> ep.ble.profile_index) & 1U;
+#else
+        return false;
+#endif
+    default:
         return false;
     }
-    if (ep.ble.profile_index < 0 || ep.ble.profile_index >= 32) {
-        return false;
-    }
-    return (CONFIG_ZMK_BEHAVIOR_OS_MORPH_WIN_PROFILES >> ep.ble.profile_index) & 1U;
 }
 
 static int on_os_morph_binding_pressed(struct zmk_behavior_binding *binding,
