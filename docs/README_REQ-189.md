@@ -8,6 +8,7 @@
 - 接続先 OS で変わる割当（REQ-195）: Bluetooth プロファイル 4・5 は Windows 用、1〜3 と USB は Mac 用。
   behavior の実装は `src/behaviors/behavior_os_morph.c`（このリポジトリを Zephyr モジュールとして読み込む。`zephyr/module.yml`・`CMakeLists.txt`・`Kconfig`・`dts/bindings/`）。
   Windows 用の割当の表は `tools/vil2zmk.py` の `OS_MORPHS`
+- BT 切り替え（最終版）: かなキーの長押しで入る L4 の右手上段に BT 1〜5、その下の段に出力先切替・再起動・書込モード・BT 登録解除・BT 全解除（`tools/vil2zmk.py` の `KANA_HOLD_SYSTEM`）。System（L8）は F1〜F15 とトラックパッドの速さだけ
 
 キーマップを作り直す:
 
