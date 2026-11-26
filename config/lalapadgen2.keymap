@@ -14,6 +14,9 @@
  *   - 5方向スイッチ（L0〜L4）: 左右＝←→／⌘C・⌘V、上下＝輝度／音量（REQ-192・193）、押し込みは .vil どおり
  *   - トラックパッドのジェスチャーは macOS の作法（⌃←/⌃→・Mission Control など）
  *   - コンボ・マクロは .vil の定義どおり（Shift の親指＋? で !、M0）
+ *   - 接続先 OS で変わる割当（REQ-195）: Bluetooth プロファイル 4・5（BT_SEL 3・4）は Windows 用、
+ *     1〜3 と USB は Mac 用。os_* の behavior（src/behaviors/behavior_os_morph.c）が押した瞬間に選ぶ。
+ *     bindings の 1 番目が Mac 用（.vil どおり）、2 番目が Windows 用。System レイヤーに BT 5（BT_SEL 4）を追加
  */
 
 #define ZMK_POINTING_DEFAULT_SCRL_VAL 120   /* smooth scrolling 有効時の推奨値 */
@@ -94,6 +97,133 @@
                 , <&macro_tap &kp KP_N4>
                 , <&macro_release &kp LGUI &kp LSHIFT &kp LCTRL>;
         };
+
+        /* ⌘ → Ctrl（⌘ の位置で Windows のショートカット） */
+        os_cmd: os_cmd {
+            compatible = "lalapad,behavior-os-morph";
+            #binding-cells = <0>;
+            bindings = <&kp LGUI>, <&kp LCTRL>;
+        };
+
+        /* Ctrl → Win キー */
+        os_ctrl: os_ctrl {
+            compatible = "lalapad,behavior-os-morph";
+            #binding-cells = <0>;
+            bindings = <&kp LCTRL>, <&kp LGUI>;
+        };
+
+        /* 取り消し ⌘Z → Ctrl+Z */
+        os_undo: os_undo {
+            compatible = "lalapad,behavior-os-morph";
+            #binding-cells = <0>;
+            bindings = <&kp LG(Z)>, <&kp LC(Z)>;
+        };
+
+        /* カット ⌘X → Ctrl+X */
+        os_cut: os_cut {
+            compatible = "lalapad,behavior-os-morph";
+            #binding-cells = <0>;
+            bindings = <&kp LG(X)>, <&kp LC(X)>;
+        };
+
+        /* コピー ⌘C → Ctrl+C */
+        os_copy: os_copy {
+            compatible = "lalapad,behavior-os-morph";
+            #binding-cells = <0>;
+            bindings = <&kp LG(C)>, <&kp LC(C)>;
+        };
+
+        /* ペースト ⌘V → Ctrl+V */
+        os_paste: os_paste {
+            compatible = "lalapad,behavior-os-morph";
+            #binding-cells = <0>;
+            bindings = <&kp LG(V)>, <&kp LC(V)>;
+        };
+
+        /* やり直し ⇧⌘Z → Ctrl+Y */
+        os_redo: os_redo {
+            compatible = "lalapad,behavior-os-morph";
+            #binding-cells = <0>;
+            bindings = <&kp LS(LG(Z))>, <&kp LC(Y)>;
+        };
+
+        /* 英数 → 無変換（Windows の IME オフ。MS-IME の設定が要る） */
+        os_eisu: os_eisu {
+            compatible = "lalapad,behavior-os-morph";
+            #binding-cells = <0>;
+            bindings = <&kp LANG2>, <&kp INTERNATIONAL_5>;
+        };
+
+        /* かな → 変換（Windows の IME オン。MS-IME の設定が要る） */
+        os_kana: os_kana {
+            compatible = "lalapad,behavior-os-morph";
+            #binding-cells = <0>;
+            bindings = <&kp LANG1>, <&kp INTERNATIONAL_4>;
+        };
+
+        /* 左の操作スペース ⌃← → 左の仮想デスクトップ Win+Ctrl+← */
+        os_desk_l: os_desk_l {
+            compatible = "lalapad,behavior-os-morph";
+            #binding-cells = <0>;
+            bindings = <&kp LC(LEFT)>, <&kp LC(LG(LEFT))>;
+        };
+
+        /* 右の操作スペース ⌃→ → 右の仮想デスクトップ Win+Ctrl+→ */
+        os_desk_r: os_desk_r {
+            compatible = "lalapad,behavior-os-morph";
+            #binding-cells = <0>;
+            bindings = <&kp LC(RIGHT)>, <&kp LC(LG(RIGHT))>;
+        };
+
+        /* Mission Control ⌃↑ → タスクビュー Win+Tab */
+        os_overview: os_overview {
+            compatible = "lalapad,behavior-os-morph";
+            #binding-cells = <0>;
+            bindings = <&kp LC(UP)>, <&kp LG(TAB)>;
+        };
+
+        /* アプリケーションウインドウ ⌃↓ → デスクトップを表示 Win+D */
+        os_app_win: os_app_win {
+            compatible = "lalapad,behavior-os-morph";
+            #binding-cells = <0>;
+            bindings = <&kp LC(DOWN)>, <&kp LG(D)>;
+        };
+
+        /* 調べる ⌃⌘D → 中クリック（Gen2 標準の Windows 向け割当） */
+        os_lookup: os_lookup {
+            compatible = "lalapad,behavior-os-morph";
+            #binding-cells = <0>;
+            bindings = <&kp LC(LG(D))>, <&mkp MCLK>;
+        };
+
+        /* マクロ M0（⌃⇧⌘＋テンキー4）→ 画面の切り取り Win+Shift+S */
+        os_shot: os_shot {
+            compatible = "lalapad,behavior-os-morph";
+            #binding-cells = <0>;
+            bindings = <&m0>, <&kp LG(LS(S))>;
+        };
+
+        /* &lt と同じ設定で、タップが os_eisu（Mac=英数／Windows=無変換） */
+        lt_eisu: lt_eisu {
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            flavor = "balanced";
+            tapping-term-ms = <250>;
+            quick-tap-ms = <250>;
+            require-prior-idle-ms = <120>;
+            bindings = <&mo>, <&os_eisu>;
+        };
+
+        /* &lt と同じ設定で、タップが os_kana（Mac=かな／Windows=変換） */
+        lt_kana: lt_kana {
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            flavor = "balanced";
+            tapping-term-ms = <250>;
+            quick-tap-ms = <250>;
+            require-prior-idle-ms = <120>;
+            bindings = <&mo>, <&os_kana>;
+        };
     };
 
     combos {
@@ -125,10 +255,10 @@
 &kp Q               &kp L               &kp U               &kp COMMA           &kp DOT                                                   &kp F               &kp W               &kp R               &kp Y               &kp P
 &kp E               &kp I               &kp A               &kp O               &kp MINUS                                                 &kp K               &kp T               &kp N               &kp S               &kp H
 &kp J               &kp X               &kp C               &kp V               &kp LS(SLASH)                                             &kp G               &kp D               &kp M               &kp Z               &kp B
-&kp LGUI            &kp LALT            &kp LCTRL           &lt 3 LANG2         &ht_l LSHIFT SPACE  &lt 1 ENTER         &lt 2 BSPC          &ht_r RSHIFT TAB    &lt 4 LANG1         &kp DEL             &kp C_AC_BACK       &kp ESC
-                    &m0                 &kp RIGHT           &kp C_BRI_DN        &kp LEFT            &kp C_BRI_UP        &kp C_VOL_UP        &kp LG(C)           &kp C_VOL_DN        &kp LG(V)           &kp C_MUTE
-&mkp LCLK           &mkp RCLK           &kp LC(LG(D))                                                                                                                                                                 &mkp LCLK           &mkp RCLK           &kp LC(LG(D))
-&kp LC(LEFT)        &kp LC(RIGHT)       &kp LC(UP)          &kp LC(DOWN)        &kp LGUI                                                  &kp LC(LEFT)        &kp LC(RIGHT)       &kp LC(UP)          &kp LC(DOWN)        &kp LGUI
+&os_cmd             &kp LALT            &os_ctrl            &lt_eisu 3 0        &ht_l LSHIFT SPACE  &lt 1 ENTER         &lt 2 BSPC          &ht_r RSHIFT TAB    &lt_kana 4 0        &kp DEL             &kp C_AC_BACK       &kp ESC
+                    &os_shot            &kp RIGHT           &kp C_BRI_DN        &kp LEFT            &kp C_BRI_UP        &kp C_VOL_UP        &os_copy            &kp C_VOL_DN        &os_paste           &kp C_MUTE
+&mkp LCLK           &mkp RCLK           &os_lookup                                                                                                                                                                    &mkp LCLK           &mkp RCLK           &os_lookup
+&os_desk_l          &os_desk_r          &os_overview        &os_app_win         &os_cmd                                                   &os_desk_l          &os_desk_r          &os_overview        &os_app_win         &os_cmd
             >;
         };
 
@@ -138,8 +268,8 @@
 &kp LS(INTERNATIONAL_1)  &kp LS(COMMA)            &kp LS(DOT)              &kp COMMA                &kp DOT                                                                  &kp SLASH                &kp KP_N7                &kp KP_N8                &kp KP_N9                &kp KP_PLUS
 &kp SLASH                &kp LS(N6)               &kp LBKT                 &kp LS(N8)               &kp LS(N9)                                                               &kp SQT                  &kp KP_N4                &kp KP_N5                &kp KP_N6                &kp KP_MINUS
 &none                    &kp LS(N5)               &kp LS(MINUS)            &kp RBKT                 &kp NON_US_HASH                                                          &kp KP_N0                &kp KP_N1                &kp KP_N2                &kp KP_N3                &kp KP_MULTIPLY
-&kp LCTRL                &kp LALT                 &kp LGUI                 &lt 3 LANG2              &ht_l LSHIFT SPACE       &none                    &lt 2 BSPC               &ht_r RSHIFT TAB         &lt 4 LANG1              &kp KP_DOT               &kp KP_DIVIDE            &kp ESC
-                         &none                    &kp RIGHT                &kp C_BRI_DN             &kp LEFT                 &kp C_BRI_UP             &kp C_VOL_UP             &kp LG(C)                &kp C_VOL_DN             &kp LG(V)                &kp C_MUTE
+&os_ctrl                 &kp LALT                 &os_cmd                  &lt_eisu 3 0             &ht_l LSHIFT SPACE       &none                    &lt 2 BSPC               &ht_r RSHIFT TAB         &lt_kana 4 0             &kp KP_DOT               &kp KP_DIVIDE            &kp ESC
+                         &none                    &kp RIGHT                &kp C_BRI_DN             &kp LEFT                 &kp C_BRI_UP             &kp C_VOL_UP             &os_copy                 &kp C_VOL_DN             &os_paste                &kp C_MUTE
 &trans                   &trans                   &trans                                                                                                                                                                                                                     &trans                   &trans                   &trans
 &trans                   &trans                   &trans                   &trans                   &trans                                                                   &trans                   &trans                   &trans                   &trans                   &trans
             >;
@@ -150,9 +280,9 @@
             bindings = <
 &kp HOME            &kp PG_UP           &kp UP              &kp PG_DN           &kp END                                                   &kp HOME            &kp PG_UP           &kp UP              &kp PG_DN           &kp END
 &none               &kp LEFT            &kp DOWN            &kp RIGHT           &none                                                     &none               &kp LEFT            &kp DOWN            &kp RIGHT           &none
-&kp LG(Z)           &kp LG(X)           &kp LG(C)           &kp LG(V)           &kp LS(LG(Z))                                             &kp LG(Z)           &kp LG(X)           &kp LG(C)           &kp LG(V)           &kp LS(LG(Z))
-&kp LCTRL           &kp LALT            &kp LGUI            &lt 3 LANG2         &ht_l LSHIFT SPACE  &lt 1 ENTER         &none               &ht_r RSHIFT TAB    &lt 4 LANG1         &kp DEL             &kp C_AC_BACK       &kp ESC
-                    &none               &kp RIGHT           &kp C_BRI_DN        &kp LEFT            &kp C_BRI_UP        &kp C_VOL_UP        &kp LG(C)           &kp C_VOL_DN        &kp LG(V)           &kp C_MUTE
+&os_undo            &os_cut             &os_copy            &os_paste           &os_redo                                                  &os_undo            &os_cut             &os_copy            &os_paste           &os_redo
+&os_ctrl            &kp LALT            &os_cmd             &lt_eisu 3 0        &ht_l LSHIFT SPACE  &lt 1 ENTER         &none               &ht_r RSHIFT TAB    &lt_kana 4 0        &kp DEL             &kp C_AC_BACK       &kp ESC
+                    &none               &kp RIGHT           &kp C_BRI_DN        &kp LEFT            &kp C_BRI_UP        &kp C_VOL_UP        &os_copy            &kp C_VOL_DN        &os_paste           &kp C_MUTE
 &trans              &trans              &trans                                                                                                                                                                        &trans              &trans              &trans
 &trans              &trans              &trans              &trans              &trans                                                    &trans              &trans              &trans              &trans              &trans
             >;
@@ -164,8 +294,8 @@
 &kp F1              &kp F2              &kp F3              &kp F4              &kp F5                                                    &kp F1              &kp F2              &kp F3              &kp F4              &kp F5
 &kp F6              &kp F7              &kp F8              &kp F9              &kp F10                                                   &kp F6              &kp F7              &kp F8              &kp F9              &kp F10
 &kp F11             &kp F12             &none               &none               &none                                                     &kp F11             &kp F12             &none               &none               &none
-&kp LCTRL           &kp LALT            &kp LGUI            &none               &ht_l LSHIFT SPACE  &lt 1 ENTER         &lt 2 BSPC          &ht_r RSHIFT TAB    &lt 4 LANG1         &kp DEL             &kp C_AC_BACK       &kp ESC
-                    &none               &kp RIGHT           &kp C_BRI_DN        &kp LEFT            &kp C_BRI_UP        &kp C_VOL_UP        &kp LG(C)           &kp C_VOL_DN        &kp LG(V)           &kp C_MUTE
+&os_ctrl            &kp LALT            &os_cmd             &none               &ht_l LSHIFT SPACE  &lt 1 ENTER         &lt 2 BSPC          &ht_r RSHIFT TAB    &lt_kana 4 0        &kp DEL             &kp C_AC_BACK       &kp ESC
+                    &none               &kp RIGHT           &kp C_BRI_DN        &kp LEFT            &kp C_BRI_UP        &kp C_VOL_UP        &os_copy            &kp C_VOL_DN        &os_paste           &kp C_MUTE
 &trans              &trans              &trans                                                                                                                                                                        &trans              &trans              &trans
 &trans              &trans              &trans              &trans              &trans                                                    &trans              &trans              &trans              &trans              &trans
             >;
@@ -177,8 +307,8 @@
 &none               &none               &none               &none               &none                                                     &none               &none               &none               &none               &none
 &none               &none               &none               &none               &none                                                     &none               &none               &none               &none               &none
 &none               &none               &none               &none               &none                                                     &none               &none               &none               &none               &none
-&kp LCTRL           &kp LALT            &kp LGUI            &none               &ht_l LSHIFT SPACE  &lt 1 ENTER         &lt 2 BSPC          &none               &none               &kp DEL             &kp C_AC_BACK       &kp ESC
-                    &none               &kp RIGHT           &kp C_BRI_DN        &kp LEFT            &kp C_BRI_UP        &kp C_VOL_UP        &kp LG(C)           &kp C_VOL_DN        &kp LG(V)           &kp C_MUTE
+&os_ctrl            &kp LALT            &os_cmd             &none               &ht_l LSHIFT SPACE  &lt 1 ENTER         &lt 2 BSPC          &none               &none               &kp DEL             &kp C_AC_BACK       &kp ESC
+                    &none               &kp RIGHT           &kp C_BRI_DN        &kp LEFT            &kp C_BRI_UP        &kp C_VOL_UP        &os_copy            &kp C_VOL_DN        &os_paste           &kp C_MUTE
 &trans              &trans              &trans                                                                                                                                                                        &trans              &trans              &trans
 &trans              &trans              &trans              &trans              &trans                                                    &trans              &trans              &trans              &trans              &trans
             >;
@@ -190,7 +320,7 @@
 &kp Q               &kp W               &kp E               &kp R               &kp T                                                     &kp Y               &kp U               &kp I               &kp O               &kp P
 &kp A               &kp S               &kp D               &kp F               &kp G                                                     &kp H               &kp J               &kp K               &kp L               &kp MINUS
 &kp Z               &kp X               &kp C               &kp V               &kp B                                                     &kp N               &kp M               &kp COMMA           &kp DOT             &kp SLASH
-&kp LGUI            &kp LALT            &kp LCTRL           &lt 3 LANG2         &ht_l LSHIFT SPACE  &lt 1 ENTER         &lt 2 BSPC          &ht_r RSHIFT TAB    &lt 4 LANG1         &none               &none               &kp ESC
+&os_cmd             &kp LALT            &os_ctrl            &lt_eisu 3 0        &ht_l LSHIFT SPACE  &lt 1 ENTER         &lt 2 BSPC          &ht_r RSHIFT TAB    &lt_kana 4 0        &none               &none               &kp ESC
                     &none               &none               &to 6               &to 0               &none               &none               &none               &none               &none               &none
 &trans              &trans              &trans                                                                                                                                                                        &trans              &trans              &trans
 &trans              &trans              &trans              &trans              &trans                                                    &trans              &trans              &trans              &trans              &trans
@@ -203,7 +333,7 @@
 &kp P               &kp Z               &kp H               &kp F               &kp SLASH                                                 &kp MINUS           &kp Y               &kp O               &kp W               &kp V
 &kp D               &kp S               &kp N               &kp T               &kp G                                                     &kp L               &kp A               &kp I               &kp U               &kp E
 &kp B               &kp R               &kp M               &kp K               &kp J                                                     &kp X               &kp COMMA           &kp C               &kp DOT             &kp Q
-&kp LGUI            &kp LALT            &kp LCTRL           &lt 3 LANG2         &ht_l LSHIFT SPACE  &lt 1 ENTER         &lt 2 BSPC          &ht_r RSHIFT TAB    &lt 4 LANG1         &none               &none               &kp ESC
+&os_cmd             &kp LALT            &os_ctrl            &lt_eisu 3 0        &ht_l LSHIFT SPACE  &lt 1 ENTER         &lt 2 BSPC          &ht_r RSHIFT TAB    &lt_kana 4 0        &none               &none               &kp ESC
                     &none               &to 5               &none               &to 0               &none               &none               &none               &none               &none               &none
 &trans              &trans              &trans                                                                                                                                                                        &trans              &trans              &trans
 &trans              &trans              &trans              &trans              &trans                                                    &trans              &trans              &trans              &trans              &trans
@@ -253,7 +383,7 @@
             display-name = "System";
             bindings = <
 &kp F1                          &kp F2                          &kp F3                          &kp F4                          &kp F5                                                                                        &out OUT_TOG                    &bt BT_SEL 0                    &bt BT_SEL 1                    &bt BT_SEL 2                    &bt BT_SEL 3
-&kp F6                          &kp F7                          &kp F8                          &kp F9                          &kp F10                                                                                       &sys_reset                      &bootloader                     &bt BT_CLR                      &bt BT_CLR_ALL                  &trans
+&kp F6                          &kp F7                          &kp F8                          &kp F9                          &kp F10                                                                                       &sys_reset                      &bootloader                     &bt BT_CLR                      &bt BT_CLR_ALL                  &bt BT_SEL 4
 &kp F11                         &kp F12                         &kp F13                         &kp F14                         &kp F15                                                                                       &zip_dyn_scale ZDS_XY ZDS_INC   &zip_dyn_scale ZDS_XY ZDS_DEC   &zip_dyn_scale ZDS_SC ZDS_INC   &zip_dyn_scale ZDS_SC ZDS_DEC   &zip_dyn_scale ZDS_ALL ZDS_RST
 &trans                          &trans                          &trans                          &trans                          &trans                          &trans                          &trans                          &trans                          &trans                          &trans                          &trans                          &trans
                                 &trans                          &trans                          &trans                          &trans                          &trans                          &trans                          &trans                          &trans                          &trans                          &trans
