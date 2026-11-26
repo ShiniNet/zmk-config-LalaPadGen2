@@ -12,4 +12,14 @@ config ZMK_BEHAVIOR_OS_MORPH_WIN_PROFILES
     help
       ビット n が立っているプロファイル（BT_SEL n）に Bluetooth で接続しているあいだ、
       os-morph の 2 番目の割当（Windows 用）を使う。既定 0x18 = BT_SEL 3・4
-      （1 始まりで数えて 4 番・5 番）。USB で接続しているときは常に 1 番目（Mac 用）。
+      （1 始まりで数えて 4 番・5 番）。選んでいるプロファイルが接続中のときだけ。
+      どこにも接続していないときは 1 番目（Mac 用）。
+
+config ZMK_BEHAVIOR_OS_MORPH_USB_IS_WINDOWS
+    bool "USB で接続しているあいだは Windows 用の割当にする"
+    default y
+    depends on ZMK_BEHAVIOR_OS_MORPH
+    help
+      出力先が USB（ホストが HID として認識している）のとき、os-morph の 2 番目の割当
+      （Windows 用）を使う（REQ-195 追記4、2026-11-26 稜太の決定）。
+      Mac に USB でつないだときも Windows 用になる。n にすると USB は Mac 用。
