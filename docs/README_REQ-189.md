@@ -5,6 +5,9 @@
 - 対応表: `docs/REQ-189_対応表.md`（REQ-194 の差分一覧を含む）
 - ビジュアライザー: `docs/lalapadgen2_visualizer.html`
 - 旧版の .vil（REQ-189〜193 で使った大西配列.vil）: `docs/ohnishi_cornix.vil`
+- 接続先 OS で変わる割当（REQ-195）: Bluetooth プロファイル 4・5 は Windows 用、1〜3 と USB は Mac 用。
+  behavior の実装は `src/behaviors/behavior_os_morph.c`（このリポジトリを Zephyr モジュールとして読み込む。`zephyr/module.yml`・`CMakeLists.txt`・`Kconfig`・`dts/bindings/`）。
+  Windows 用の割当の表は `tools/vil2zmk.py` の `OS_MORPHS`
 
 キーマップを作り直す:
 
