@@ -1,0 +1,12 @@
+# 接続先 OS で割当を切り替える behavior（REQ-195）
+# bindings の 1 番目 = Mac 用（Bluetooth プロファイル 1〜3・USB）、2 番目 = Windows 用（プロファイル 4・5）
+description: OS morph behavior (Mac binding / Windows binding chosen by the active BLE profile)
+
+compatible: "lalapad,behavior-os-morph"
+
+include: zero_param.yaml
+
+properties:
+  bindings:
+    type: phandle-array
+    required: true

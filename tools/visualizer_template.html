@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LaLapad Gen2 大西配列キーマップ ビジュアライザー</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --text: #1d2430; --muted: #687386; --line: #d7dde7; --panel: #fff;
+    --shadow: 0 12px 28px rgba(32, 43, 58, .12);
+    --letter: #e7f0ff; --letter-b: #88aee7;
+    --punct: #f4edf1; --punct-b: #c58aa6;
+    --number: #fff3cf; --number-b: #d4a636;
+    --nav: #e8f6ec; --nav-b: #65ad78;
+    --edit: #e9f5f0; --edit-b: #4f9b83;
+    --function: #eee9ff; --function-b: #9476d6;
+    --mouse: #e7f7f8; --mouse-b: #55aeb8;
+    --media: #fdeee8; --media-b: #d98a6a;
+    --system: #edf0f4; --system-b: #9ca8b6;
+    --layer: #fff0e6; --layer-b: #d8874b;
+    --mod: #f1f3f6; --mod-b: #8d99a8;
+    --none: #f9fafb; --none-b: #e2e6ec;
+    --u: 76px;
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI", Meiryo, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); }
+  .shell { width: min(1180px, calc(100% - 32px)); margin: 28px auto 48px; }
+  header { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; }
+  h1 { margin: 0; font-size: 24px; line-height: 1.25; }
+  .subtitle { margin-top: 6px; color: var(--muted); font-size: 14px; line-height: 1.6; }
+  .meta { color: var(--muted); font-size: 12px; line-height: 1.6; text-align: right; white-space: nowrap; }
+  .meta .warn { color: #b4441b; font-weight: 700; }
+  .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 14px; }
+  .tab { appearance: none; border: 1px solid var(--line); background: #fff; color: var(--text); border-radius: 8px;
+         padding: 8px 12px; font: inherit; font-size: 14px; cursor: pointer; }
+  .tab small { color: var(--muted); margin-left: 4px; }
+  .tab[aria-selected="true"] { border-color: #2c67c7; background: #e9f1ff; color: #174b9b; font-weight: 700; }
+  .tab.empty { opacity: .55; }
+  .summary { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+  .box { border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 12px 14px; }
+  .box .t { display: block; color: var(--muted); font-size: 12px; margin-bottom: 4px; }
+  .box .m { font-size: 15px; line-height: 1.5; font-weight: 650; }
+  .panel { border: 1px solid var(--line); background: var(--panel); border-radius: 8px; box-shadow: var(--shadow);
+           padding: 20px; overflow-x: auto; }
+  .board { position: relative; }
+  .key { position: absolute; border: 1px solid var(--none-b); border-bottom-width: 3px; border-radius: 8px;
+         background: var(--none); padding: 5px 6px; display: grid; grid-template-rows: auto 1fr auto; overflow: hidden; }
+  .key .pos { font-size: 9px; color: #9aa4b2; line-height: 1; }
+  .key .tap { align-self: center; justify-self: center; text-align: center; font-weight: 760; font-size: 19px; line-height: 1.1;
+              overflow-wrap: anywhere; }
+  .key .tap.s { font-size: 13px; } .key .tap.xs { font-size: 11px; }
+  .key .hold { font-size: 10px; color: var(--muted); text-align: center; line-height: 1.15; }
+  .key .hold b { color: #9a4a12; }
+  .key.inherit { opacity: .45; border-style: dashed; }
+  .board.compact .key .pos, .board.compact .key .hold { display: none; }
+  .board.compact .key { grid-template-rows: 1fr; place-items: center; padding: 2px; }
+  .board.compact .key .tap { font-size: 12px; } .board.compact .key .tap.s, .board.compact .key .tap.xs { font-size: 9px; }
+  .key.five { border-radius: 50%; padding: 2px; grid-template-rows: 1fr; place-items: center; }
+  .key.five .pos, .key.five .hold { display: none; }
+  .key.five .tap { font-size: 9px; font-weight: 700; line-height: 1; }
+  .key.five.center { border-width: 2px; }
+  .key.letter { background: var(--letter); border-color: var(--letter-b); }
+  .key.punct { background: var(--punct); border-color: var(--punct-b); }
+  .key.number { background: var(--number); border-color: var(--number-b); }
+  .key.nav { background: var(--nav); border-color: var(--nav-b); }
+  .key.edit { background: var(--edit); border-color: var(--edit-b); }
+  .key.function { background: var(--function); border-color: var(--function-b); }
+  .key.mouse { background: var(--mouse); border-color: var(--mouse-b); }
+  .key.media { background: var(--media); border-color: var(--media-b); }
+  .key.system { background: var(--system); border-color: var(--system-b); }
+  .key.layer { background: var(--layer); border-color: var(--layer-b); }
+  .key.mod { background: var(--mod); border-color: var(--mod-b); }
+  .key.osdiff { box-shadow: 0 0 0 3px #7b3fe4; }
+  .key.osdiff::after { content: "Win"; position: absolute; top: 2px; right: 3px; font-size: 8px; font-weight: 800;
+                       color: #fff; background: #7b3fe4; border-radius: 3px; padding: 0 3px; line-height: 12px; }
+  .key.five.osdiff::after { display: none; }
+  .ostoggle { display: flex; gap: 8px; margin: 18px 0 0; align-items: center; flex-wrap: wrap; }
+  .ostoggle .lab { color: var(--muted); font-size: 13px; margin-right: 4px; }
+  .osbtn { appearance: none; border: 1px solid var(--line); background: #fff; color: var(--text); border-radius: 999px;
+           padding: 7px 14px; font: inherit; font-size: 14px; cursor: pointer; }
+  .osbtn[aria-pressed="true"] { border-color: #7b3fe4; background: #f1eafe; color: #4b1fa3; font-weight: 700; }
+  .osbtn.mac[aria-pressed="true"] { border-color: #2c67c7; background: #e9f1ff; color: #174b9b; }
+  .combo { position: absolute; transform: translate(-50%, -50%); z-index: 3; background: #1d2430; color: #fff;
+           font-size: 10px; font-weight: 700; border-radius: 999px; padding: 2px 7px; white-space: nowrap;
+           box-shadow: 0 2px 6px rgba(0,0,0,.2); }
+  .areaLabel { position: absolute; font-size: 11px; color: var(--muted); transform: translateX(-50%); white-space: nowrap; }
+  .pad { position: absolute; border-radius: 12px; background: #2a313c; color: #c9d2de; display: grid; place-items: center;
+         font-size: 12px; text-align: center; line-height: 1.4; box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); }
+  .knob { position: absolute; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: #1d2430;
+          box-shadow: 0 0 0 3px rgba(29,36,48,.15); }
+  .leader { position: absolute; border-left: 1px dashed #9aa4b2; }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 14px; color: var(--muted); font-size: 12px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .sw { width: 18px; height: 12px; border-radius: 3px; border: 1px solid; display: inline-block; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 5px 6px; border-bottom: 1px solid #eef1f5; vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 12px; }
+  td.inh { color: var(--muted); }
+  h2 { font-size: 14px; margin: 0 0 8px; }
+  .note { color: var(--muted); font-size: 12px; line-height: 1.6; margin: 8px 0 0; }
+  @media (max-width: 820px) { .summary, .grid2 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main class="shell">
+  <header>
+    <div>
+      <h1>LaLapad Gen2 大西配列キーマップ</h1>
+      <div class="subtitle">config/lalapadgen2.keymap から生成。実機のカラムスタッガード（列ごとの縦ずれ）で表示。文字は JIS 入力として表示（小さい字は ZMK のキー名）。接続先が Windows（Bluetooth プロファイル 4・5、USB）のときの割当は「Windows」に切り替えて見る。紫の枠＝Mac と割当が違うキー。</div>
+    </div>
+    <div class="meta" id="meta"></div>
+  </header>
+  <div class="ostoggle" id="ostoggle"></div>
+  <nav class="tabs" id="tabs"></nav>
+  <p class="note" style="margin:-6px 0 12px">変更（最終版、2026-11-26）: ① BT 切り替えは <b>かな長押し（L4 Mouse）</b>へ移した。右手の上段に左から BT 1〜5、その下の段に出力先切替・再起動・書込モード・BT 登録解除・BT 全解除。System（L8）には F キーとトラックパッドの速さだけを残した。② .vil の L5（QWERTY）と L6（別のカナ配列）を削除し、後ろのレイヤーを繰り上げた（空きの L7〜L9 → L5〜L7、System は L10 → L8）。③ Num の右下段は Esc をやめて、その位置に ／、隣に −。④ 右下段の Delete・戻る の仮置きをやめた。⑤ コンボの待ち時間を 10000 ms → 50 ms に短くした。⑥ USB でつないでいるあいだは Windows の割当にした（REQ-195 追記4。Bluetooth は 4・5 が Windows、1〜3 と未接続は Mac のまま）。⑦ ？ のキーはシフトを保持したまま押しても ！ になる（mod-morph、REQ-195 追記5。コンボは同時押しのときだけだった）。⑧ トラックパッドの速さ: 右はカーソルを速く（1/5 → 1/4）、スクロールを遅く（1/12 → 1/18）。左は低速に（カーソル 1/12、スクロール 1/60）。低速モードも連動。<br>
+      ⑨ レイヤー間の切替: Num / Nav / Fn / Mouse では親指のレイヤーキー位置が「押すと切り替わる」キーになった。他のレイヤーのキー位置を押すとそのレイヤーへ移り、自分のキー位置を押すと Base へ戻る。Num の英数・かな位置だけは長押しのまま。<br>
+      ⑩ トラックパッドの速さ（2 回目）: 左右とも速くした。右はカーソル 1/3・スクロール 1/12、左はカーソル 1/8・スクロール 1/40。低速モードも連動。<br>
+      ⑪ トラックパッドの速さ（3 回目）: 右だけさらに速くした。カーソル 1/2・スクロール 1/8（低速モード 1/6・1/24）。左は据え置き。<br>
+      ⑫ トラックパッドの速さ（4 回目）: 左右とも約 1.5 倍。右はカーソル 3/4・スクロール 3/16、左はカーソル 3/16・スクロール 3/80。低速モードも連動。<br>
+      ⑬ レイヤー間の移動を「押している間だけ」に変更: ⑨ の「押すと切り替わり、離しても戻らない」はやめた。Num を押したまま Nav のキー位置を押すと Nav が重なり、離すと Num に戻る。<br>
+      ⑭ タップの復旧: レイヤーキー位置のタップ（Num の BS、Nav・Fn・Mouse の Enter と BS、Fn のかな）を元に戻した。長押し＝レイヤー、タップ＝元のキー。</p>
+  <section class="summary">
+    <div class="box"><span class="t">レイヤー</span><div class="m" id="layerTitle"></div></div>
+    <div class="box"><span class="t">出し方</span><div class="m" id="layerTrigger"></div></div>
+  </section>
+  <section class="panel">
+    <div class="board" id="board"></div>
+    <div class="legend" id="legend"></div>
+  </section>
+  <section class="grid2">
+    <div class="box">
+      <h2>同時押し（コンボ）</h2>
+      <table id="comboTable"></table>
+      <p class="note">Cornix_20261126.vil の定義どおり（Shift の親指と ? をほぼ同時に押すと !）。Base でだけ働く。待ち時間は 50 ms（ZMK・Vial の標準値。.vil の 10000 ms から短くした）。2 つ目のキーが 50 ms 以内に来ないときは、それぞれ普通に押したことになる。</p>
+      <h2>マクロ</h2>
+      <table id="macroTable"></table>
+    </div>
+    <div class="box">
+      <h2>トラックパッドの操作</h2>
+      <table id="tpTable"></table>
+      <p class="note">Mac 表示は macOS のトラックパッドの作法、Windows 表示は Windows の相当操作（仮想デスクトップ・タスクビューなど）。1本指で移動、2本指でスクロール（慣性あり）、カーソルの慣性はなし。薄い字は下のレイヤーから引き継いだ割当。</p>
+    </div>
+    <div class="box">
+      <h2>接続先 OS で変わる割当</h2>
+      <table id="osTable"></table>
+      <p class="note" id="osNote"></p>
+    </div>
+    <div class="box">
+      <h2>5方向スイッチ</h2>
+      <table id="fiveTable"></table>
+      <p class="note">L0〜L4: 上下＝左手は輝度・右手は音量、左右＝左手は矢印 ←→・右手はコピー（左）とペースト（右）。押し込み＝Cornix のエンコーダーの押下キー（.vil どおり）。</p>
+    </div>
+  </section>
+</main>
+<script>
+const DATA = /*@@DATA@@*/null;
+
+// ---- 表示名 -------------------------------------------------------------------------
+const JIS = { MINUS: "-", DOT: ".", COMMA: ",", SLASH: "/", SEMI: ";", SQT: ":", LBKT: "@", RBKT: "[", NON_US_HASH: "]" };
+const KEYS = {
+  ESC: ["Esc", "edit"], TAB: ["Tab", "edit"], DEL: ["Del", "edit"], ENTER: ["Enter", "edit"], SPACE: ["Space", "edit"],
+  BSPC: ["BS", "edit"], LANG1: ["かな", "edit"], LANG2: ["英数", "edit"], K_APP: ["App", "edit"],
+  LCTRL: ["⌃ Ctrl", "mod"], RCTRL: ["⌃ Ctrl", "mod"], LALT: ["⌥ Opt", "mod"], RALT: ["⌥ Opt", "mod"],
+  LGUI: ["⌘ Cmd", "mod"], RGUI: ["⌘ Cmd", "mod"], LSHIFT: ["⇧ Shift", "mod"], RSHIFT: ["⇧ Shift", "mod"],
+  HOME: ["Home", "nav"], END: ["End", "nav"], PG_UP: ["PgUp", "nav"], PG_DN: ["PgDn", "nav"],
+  UP: ["↑", "nav"], DOWN: ["↓", "nav"], LEFT: ["←", "nav"], RIGHT: ["→", "nav"],
+  K_UNDO: ["Undo", "edit"], K_CUT: ["Cut", "edit"], K_COPY: ["Copy", "edit"], K_PASTE: ["Paste", "edit"], K_AGAIN: ["Again", "edit"],
+  KP_MINUS: ["KP −", "number"], KP_PLUS: ["KP +", "number"], KP_DIVIDE: ["KP /", "number"], KP_MULTIPLY: ["KP *", "number"], KP_DOT: ["KP .", "number"],
+  C_AC_BACK: ["戻る", "media"], C_MUTE: ["ミュート", "media"], C_VOL_UP: ["音量+", "media"], C_VOL_DN: ["音量−", "media"],
+  C_BRI_UP: ["輝度+", "media"], C_BRI_DN: ["輝度−", "media"], C_SLEEP: ["スリープ", "media"],
+};
+const MOUSE = {
+  LCLK: "左クリック", RCLK: "右クリック", MCLK: "中クリック", MB4: "ボタン4", MB5: "ボタン5",
+  MOVE_UP: "カーソル↑", MOVE_DOWN: "カーソル↓", MOVE_LEFT: "カーソル←", MOVE_RIGHT: "カーソル→",
+  SCRL_UP: "ホイール↑", SCRL_DOWN: "ホイール↓", SCRL_LEFT: "ホイール←", SCRL_RIGHT: "ホイール→",
+};
+const ZDS = { "ZDS_XY ZDS_INC": "ポインタ速度+", "ZDS_XY ZDS_DEC": "ポインタ速度−", "ZDS_SC ZDS_INC": "スクロール速度+",
+              "ZDS_SC ZDS_DEC": "スクロール速度−", "ZDS_ALL ZDS_RST": "速度を初期値に" };
+// JIS 配列で ⇧ と一緒に押したときの文字（Mac の JIS 入力）
+const JIS_SHIFT = { N1: "!", N2: "\"", N3: "#", N4: "$", N5: "%", N6: "&", N7: "'", N8: "(", N9: ")", MINUS: "=",
+                    COMMA: "<", DOT: ">", SLASH: "?", INTERNATIONAL_1: "_", SQT: "*", SEMI: "+", LBKT: "`", RBKT: "{", NON_US_HASH: "}" };
+const MODSYM = { LC: "⌃", LA: "⌥", LG: "⌘", LS: "⇧", RC: "⌃", RA: "⌥", RG: "⌘", RS: "⇧" };
+
+const WIN_SHORTCUTS = {
+  "LC(Z)": ["取り消し（Ctrl+Z）", "edit"], "LC(X)": ["カット（Ctrl+X）", "edit"], "LC(C)": ["コピー（Ctrl+C）", "edit"],
+  "LC(V)": ["ペースト（Ctrl+V）", "edit"], "LC(Y)": ["やり直し（Ctrl+Y）", "edit"],
+  "LC(LG(LEFT))": ["左の仮想デスクトップへ（Win+Ctrl+←）", "system"], "LC(LG(RIGHT))": ["右の仮想デスクトップへ（Win+Ctrl+→）", "system"],
+  "LG(TAB)": ["タスクビュー（Win+Tab）", "system"], "LG(D)": ["デスクトップを表示（Win+D）", "system"],
+  "LG(LS(S))": ["画面の切り取り（Win+Shift+S）", "system"],
+};
+const WIN_KEYS = { LGUI: ["⊞ Win", "mod"], RGUI: ["⊞ Win", "mod"], LCTRL: ["Ctrl", "mod"], RCTRL: ["Ctrl", "mod"],
+                   LALT: ["Alt", "mod"], RALT: ["Alt", "mod"], LSHIFT: ["Shift", "mod"], RSHIFT: ["Shift", "mod"] };
+const WIN_MODSYM = { LC: "Ctrl+", LA: "Alt+", LG: "Win+", LS: "Shift+", RC: "Ctrl+", RA: "Alt+", RG: "Win+", RS: "Shift+" };
+let OS = "mac";   // 表示中の接続先 OS（mac / win）
+const MAC_SHORTCUTS = {
+  "LC(LEFT)": ["左の操作スペースへ（⌃←）", "system"], "LC(RIGHT)": ["右の操作スペースへ（⌃→）", "system"],
+  "LC(UP)": ["Mission Control（⌃↑）", "system"], "LC(DOWN)": ["アプリケーションウインドウ（⌃↓）", "system"],
+  "LC(LG(D))": ["調べる（⌃⌘D）", "system"],
+  "LG(C)": ["コピー（⌘C）", "edit"], "LG(V)": ["ペースト（⌘V）", "edit"],
+  "LG(Z)": ["取り消し（⌘Z）", "edit"], "LG(X)": ["カット（⌘X）", "edit"], "LS(LG(Z))": ["やり直し（⇧⌘Z）", "edit"],
+};
+function keyLabel(code) {
+  if (WIN_SHORTCUTS[code]) return WIN_SHORTCUTS[code];
+  if (MAC_SHORTCUTS[code]) return MAC_SHORTCUTS[code];
+  if (OS === "win" && WIN_KEYS[code]) return WIN_KEYS[code];
+  const sh = code.match(/^[LR]S\(([A-Z0-9_]+)\)$/);
+  if (sh && JIS_SHIFT[sh[1]]) return [JIS_SHIFT[sh[1]], "punct"];          // ⇧＋記号・数字 = JIS の文字
+  const m = code.match(/^(L[CAGS]|R[CAGS])\((.*)\)$/);
+  if (m) { const inner = keyLabel(m[2]); return [(OS === "win" ? WIN_MODSYM : MODSYM)[m[1]] + inner[0], inner[1] === "letter" ? "edit" : inner[1]]; }
+  if (/^[A-Z]$/.test(code)) return [code, "letter"];
+  if (/^N\d$/.test(code)) return [code.slice(1), "number"];
+  if (/^KP_N\d$/.test(code)) return ["KP " + code.slice(4), "number"];
+  if (/^F\d+$/.test(code)) return [code, "function"];
+  if (JIS[code]) return [JIS[code], "punct"];
+  if (code === "INTERNATIONAL_1") return ["ろ（\\）", "punct"];
+  if (code === "INTERNATIONAL_4") return ["変換", "edit"];
+  if (code === "INTERNATIONAL_5") return ["無変換", "edit"];
+  if (KEYS[code]) return KEYS[code];
+  return [code, "system"];
+}
+
+function LAYERS(os) { return (os || OS) === "win" ? DATA.layers_win : DATA.layers; }
+function layerName(i) { const L = DATA.layers[i]; return L ? L.name : "L" + i; }
+
+function describe(b) {
+  const p = b.split(" ");
+  const beh = p[0].slice(1), args = p.slice(1);
+  if (beh === "none") return { tap: "", cls: "none" };
+  if (beh === "trans") return { trans: true };
+  if (beh === "kp") { const [t, c] = keyLabel(args.join(" ")); return { tap: t, cls: c, code: args.join(" ") }; }
+  if (beh === "lt" || beh === "mo") {
+    const n = +args[0];
+    if (beh === "mo") return { tap: layerName(n), cls: "layer", hold: "押している間 L" + n };
+    const [t] = keyLabel(args[1]);
+    return { tap: t, cls: "layer", hold: "<b>長押し</b><br>L" + n + " " + layerName(n), code: args[1] };
+  }
+  if (DATA.behaviors[beh] || beh === "mt") {
+    const [t, c] = keyLabel(args[1]); const [h] = keyLabel(args[0]);
+    return { tap: t, cls: c, hold: "<b>長押し</b><br>" + h, code: args[1] };
+  }
+  if (beh === "to") return { tap: "L" + args[0] + " " + layerName(+args[0]) + " へ", cls: "layer", hold: "切替（押すと移る）" };
+  if (DATA.macros && DATA.macros[beh]) return { tap: DATA.macros[beh].label, cls: "system" };
+  if (beh === "mkp" || beh === "mmv" || beh === "msc") return { tap: MOUSE[args[0]] || args[0], cls: "mouse" };
+  if (beh === "bt") {
+    const n = +args[1] + 1;   // 表示は 1 始まり（ZMK の BT_SEL は 0 始まり）
+    const t = args[0] === "BT_SEL" ? "BT " + n + ((DATA.win_profiles || []).includes(n) ? "（Win）" : "（Mac）") : args[0] === "BT_CLR" ? "BT 登録解除" : args[0] === "BT_CLR_ALL" ? "BT 全解除" : args.join(" ");
+    return { tap: t, cls: "system" };
+  }
+  if (beh === "out") return { tap: "USB/BT 切替", cls: "system" };
+  if (beh === "sys_reset") return { tap: "再起動", cls: "system" };
+  if (beh === "bootloader") return { tap: "書込モード", cls: "system" };
+  if (beh === "zip_dyn_scale") return { tap: ZDS[args.join(" ")] || args.join(" "), cls: "system" };
+  return { tap: b, cls: "system" };
+}
+
+// ---- レイヤーの出し方と、透過キーの引き継ぎ ---------------------------------------
+function triggers(i) {
+  const out = [];
+  DATA.conditional.forEach(c => { if (c.then === i) out.push(c.if.map(layerName).join(" と ") + " を同時に出す（両方の長押しキーを押す）"); });
+  const L0 = LAYERS()[0].bindings;
+  L0.forEach((b, pos) => {
+    const p = b.split(" ");
+    if ((p[0] === "&lt" || p[0] === "&mo") && +p[1] === i) {
+      const d = describe(b);
+      out.push((p[0] === "&lt" ? d.tap + " を長押し" : d.tap + " を押している間") + "（位置 " + pos + "）");
+    }
+  });
+  LAYERS().forEach((L, j) => L.bindings.forEach((b, pos) => {
+    if (b === "&mo " + i && j !== i) out.push("L" + j + " " + L.name + " の（位置 " + pos + "）を押している間");
+  }));
+  if (i === 0) out.push("常に有効（いちばん下のレイヤー）");
+  return out;
+}
+function stackBelow(i) {
+  const c = DATA.conditional.find(c => c.then === i);
+  const below = c ? [...c.if].sort((a, b) => b - a) : [];
+  if (i !== 0) below.push(0);
+  return below;
+}
+function resolve(i, pos, os) {
+  const LS = LAYERS(os);
+  const b = LS[i].bindings[pos];
+  if (b !== "&trans") return { b, from: i };
+  for (const j of stackBelow(i)) { const bb = LS[j].bindings[pos]; if (bb !== "&trans") return { b: bb, from: j }; }
+  return { b: "&none", from: i };
+}
+function osDiff(i, pos) { return resolve(i, pos, "mac").b !== resolve(i, pos, "win").b; }
+function isEmpty(i) { return DATA.layers[i].bindings.slice(0, 52).every(b => b === "&none" || b === "&trans"); }
+
+// ---- 描画 ---------------------------------------------------------------------------
+let U = 0.76;   // 物理配置の 100 = 1u を何 px で描くか（画面幅に合わせて決める）
+const FIVE = new Set([42, 43, 44, 45, 46, 47, 48, 49, 50, 51]);
+const CENTER = new Set([42, 51]);
+const FIVE_NAMES = { 42: "左 押し込み", 43: "左 右", 44: "左 下", 45: "左 左", 46: "左 上", 47: "右 上", 48: "右 左", 49: "右 下", 50: "右 右", 51: "右 押し込み" };
+let current = 0;
+
+function render() {
+  const i = current, L = DATA.layers[i];
+  document.querySelectorAll(".tab").forEach((t, k) => t.setAttribute("aria-selected", k === i ? "true" : "false"));
+  document.getElementById("layerTitle").textContent = "L" + i + " " + L.name + (isEmpty(i) ? "（空き）" : "");
+  const tr = triggers(i);
+  document.getElementById("layerTrigger").textContent = tr.length ? tr.join(" ／ ") : "このレイヤーに切り替えるキーはない（.vil どおりの空きレイヤー）";
+
+  const board = document.getElementById("board");
+  board.innerHTML = "";
+  const GEO = DATA.geometry, keys = GEO.keys;
+  const maxX = GEO.width, maxY = GEO.height;
+  U = Math.max(0.3, Math.min(0.8, (board.parentElement.clientWidth - 64) / maxX));
+  board.classList.toggle("compact", U < 0.62);
+  board.style.width = (maxX * U) + "px";
+  board.style.height = (maxY * U) + "px";
+
+  GEO.pads.forEach(p => {
+    const e = document.createElement("div");
+    e.className = "pad";
+    Object.assign(e.style, { left: p.x * U + "px", top: p.y * U + "px", width: p.w * U + "px", height: p.h * U + "px" });
+    e.innerHTML = "トラックパッド<br>（" + (p.side === "L" ? "左" : "右") + "）";
+    board.appendChild(e);
+  });
+  GEO.knobs.forEach((k, n) => {
+    const line = document.createElement("div");
+    line.className = "leader";
+    Object.assign(line.style, { left: k.cx * U + "px", top: k.cy * U + "px", height: (keys[n ? 47 : 46].y - k.cy) * U + "px" });
+    board.appendChild(line);
+    const e = document.createElement("div");
+    e.className = "knob";
+    Object.assign(e.style, { left: k.cx * U + "px", top: k.cy * U + "px" });
+    e.title = "5方向スイッチの実機の位置";
+    board.appendChild(e);
+  });
+
+  keys.forEach((k, pos) => {
+    const r = resolve(i, pos);
+    const d = describe(r.b);
+    const el = document.createElement("div");
+    el.className = "key " + (d.cls || "none") + (r.from !== i ? " inherit" : "") + (FIVE.has(pos) ? " five" : "") + (CENTER.has(pos) ? " center" : "") +
+                   (OS === "win" && osDiff(i, pos) ? " osdiff" : "");
+    const gap = FIVE.has(pos) ? 2 : 4;
+    Object.assign(el.style, { left: (k.x * U + gap / 2) + "px", top: (k.y * U + gap / 2) + "px", width: (k.w * U - gap) + "px", height: (k.h * U - gap) + "px" });
+    if (k.rot) el.style.transform = `rotate(${k.rot}deg)`;
+    const len = (d.tap || "").length;
+    const size = FIVE.has(pos) ? "" : len > 6 ? " xs" : len > 3 ? " s" : "";
+    el.innerHTML = `<span class="pos">${pos}${d.code ? " · " + d.code : ""}</span><span class="tap${size}">${d.tap || ""}</span><span class="hold">${d.hold || (r.from !== i ? "L" + r.from + " から" : "")}</span>`;
+    const other = OS === "win" && osDiff(i, pos) ? "\nMac では: " + resolve(i, pos, "mac").b : "";
+    el.title = `位置 ${pos}${FIVE.has(pos) ? "（5方向スイッチ " + FIVE_NAMES[pos] + "）" : ""}\n${r.b}${r.from !== i ? "\n（L" + r.from + " から引き継ぎ）" : ""}${other}`;
+    board.appendChild(el);
+  });
+
+  const lab = (text, x, y) => { const e = document.createElement("div"); e.className = "areaLabel"; e.textContent = text; e.style.left = x + "px"; e.style.top = y + "px"; board.appendChild(e); };
+  const lab5 = (n, text) => { const c = keys[n]; lab(text, (c.x + c.w / 2) * U, (c.y + c.h + 4) * U); };
+  lab5(44, "5方向スイッチ（左）拡大");
+  lab5(49, "5方向スイッチ（右）拡大");
+
+  const active = DATA.combos.filter(c => !c.layers || c.layers.includes(i));
+  active.forEach(c => {
+    const [a, b] = c.positions.map(p => keys[p]);
+    const e = document.createElement("div");
+    e.className = "combo";
+    e.textContent = describe(c.binding).tap;
+    e.style.left = (((a.x + a.w / 2) + (b.x + b.w / 2)) / 2 * U) + "px";
+    e.style.top = (((a.y + a.h / 2) + (b.y + b.h / 2)) / 2 * U) + "px";
+    board.appendChild(e);
+  });
+
+  const ct = document.getElementById("comboTable");
+  ct.innerHTML = DATA.combos.length === 0 ? "<tr><td>なし</td></tr>" : "<tr><th>キー</th><th>出力</th><th>使えるレイヤー</th></tr>" + DATA.combos.map(c => {
+    const keysTxt = c.positions.map(p => { const d = describe(resolve(0, p).b); return (d.tap || "?") + "(" + p + ")"; }).join(" + ");
+    const on = !c.layers || c.layers.includes(i);
+    return `<tr${on ? "" : ' style="opacity:.4"'}><td>${keysTxt}</td><td>${describe(c.binding).tap}</td><td>${c.layers ? c.layers.map(n => "L" + n).join(" ") : "全レイヤー"}</td></tr>`;
+  }).join("");
+
+  // 接続先 OS で変わる割当（このレイヤー）
+  const ot = document.getElementById("osTable");
+  const rowsOs = [];
+  const TPN = { LCLK: "1本指タップ", RCLK: "2本指タップ", MCLK: "3本指タップ", LEFT: "3本指で右へスワイプ", RIGHT: "3本指で左へスワイプ",
+                UP: "3本指で上へスワイプ", DOWN: "3本指で下へスワイプ", PINCH: "ピンチ中の修飾キー" };
+  for (let pos = 0; pos < DATA.layers[i].bindings.length; pos++) {
+    if (!osDiff(i, pos)) continue;
+    const save = OS;
+    OS = "mac"; const dm = describe(resolve(i, pos, "mac").b);
+    OS = "win"; const dw = describe(resolve(i, pos, "win").b);
+    OS = save;
+    const place = FIVE.has(pos) ? "5方向 " + FIVE_NAMES[pos] : DATA.trackpad[pos] ? "パッド" + (DATA.trackpad[pos].side === "L" ? "左" : "右") + " " + (TPN[DATA.trackpad[pos].gesture] || DATA.trackpad[pos].gesture) : "位置 " + pos;
+    rowsOs.push(`<tr><td>${place}</td><td>${dm.tap || "なし"}</td><td>${dw.tap || "なし"}</td></tr>`);
+  }
+  ot.innerHTML = rowsOs.length ? "<tr><th>場所</th><th>" + osLabel("mac") + "</th><th>" + osLabel("win") + "</th></tr>" + rowsOs.join("")
+                               : "<tr><td>このレイヤーでは違いなし</td></tr>";
+  document.getElementById("osNote").textContent =
+    (DATA.usb_win ? "USB でつないでいるあいだと、" : "") + "Bluetooth のプロファイル " + (DATA.win_profiles || []).join("・") + " に接続しているあいだは Windows 用、それ以外（プロファイル 1〜3、" + (DATA.usb_win ? "" : "USB、") + "どこにも接続していないとき）は Mac 用。" + (DATA.usb_win ? "USB は Mac につないでも Windows 用になる（Mac にケーブルをつないだまま Mac 用で使うときは、かな長押しの「USB/BT 切替」で出力を Bluetooth に切り替える）。" : "") + "キーを押した瞬間の接続先で決まる。修飾キーは物理位置を変えず、⌘ の位置が Ctrl、Ctrl の位置が Win キーになる。英数・かなは 無変換・変換（MS-IME で「無変換＝IME オフ、変換＝IME オン」の設定が要る）。";
+
+  const mt = document.getElementById("macroTable");
+  const ms = Object.entries(DATA.macros || {});
+  mt.innerHTML = ms.length === 0 ? "<tr><td>なし</td></tr>" : "<tr><th>名前</th><th>動き</th><th>置き場所</th></tr>" + ms.map(([name, m]) => {
+    const where = LAYERS("mac").flatMap((L, j) => L.bindings.map((b, pos) => b === "&" + name ? "L" + j + " 位置 " + pos + (FIVE.has(pos) ? "（5方向スイッチ " + FIVE_NAMES[pos] + "）" : "") : null)).filter(Boolean);
+    return `<tr><td>${name.toUpperCase()}</td><td>${m.detail}</td><td>${where.join("、") || "なし"}</td></tr>`;
+  }).join("");
+
+  const ft = document.getElementById("fiveTable");
+  const dirs = [["上", 46, 47], ["下", 44, 49], ["左", 45, 48], ["右", 43, 50], ["押し込み", 42, 51]];
+  const cell = p => { const r = resolve(i, p); const t = describe(r.b).tap; return `<td class="${r.from !== i ? "inh" : ""}">${t || "なし"}</td>`; };
+  ft.innerHTML = "<tr><th>方向</th><th>左手</th><th>右手</th></tr>" + dirs.map(([n, l, r]) => `<tr><td>${n}</td>${cell(l)}${cell(r)}</tr>`).join("");
+
+  const tp = document.getElementById("tpTable");
+  // 仮想キーの名前（shield の POS_TP_*）と実際の操作。スワイプの向きは zmk-driver-iqs9151 の実装による
+  const G = { LCLK: "1本指でタップ", RCLK: "2本指でタップ", MCLK: "3本指でタップ", LEFT: "3本指で右へスワイプ", RIGHT: "3本指で左へスワイプ",
+              UP: "3本指で上へスワイプ", DOWN: "3本指で下へスワイプ", PINCH: "2本指でピンチ（拡大・縮小）中に押す修飾キー" };
+  const rows = Object.entries(DATA.trackpad).sort((a, b) => a[1].side.localeCompare(b[1].side) || +a[0] - +b[0]);
+  tp.innerHTML = "<tr><th>パッド</th><th>操作</th><th>割当</th></tr>" + rows.map(([pos, t]) => {
+    const r = resolve(i, +pos);
+    return `<tr><td>${t.side === "L" ? "左" : "右"}</td><td>${G[t.gesture] || t.gesture}</td><td class="${r.from !== i ? "inh" : ""}">${describe(r.b).tap || "なし"}</td></tr>`;
+  }).join("");
+}
+
+// 接続先ボタンと表の見出し。Windows になる条件は BT のプロファイル（win_profiles）と USB（usb_win、REQ-195 追記4）
+function osLabel(os) {
+  const win = DATA.win_profiles || [];
+  const mac = [1, 2, 3, 4, 5].filter(n => !win.includes(n));
+  const list = a => a.length > 2 && a[a.length - 1] - a[0] === a.length - 1 ? a[0] + "〜" + a[a.length - 1] : a.join("・");
+  return os === "mac" ? "Mac（BT " + list(mac) + (DATA.usb_win ? "" : "・USB") + "）"
+                      : "Windows（BT " + list(win) + (DATA.usb_win ? "・USB" : "") + "）";
+}
+
+function renderOsToggle() {
+  const box = document.getElementById("ostoggle");
+  box.innerHTML = `<span class="lab">接続先</span>` +
+    `<button class="osbtn mac" aria-pressed="${OS === "mac"}" data-os="mac">${osLabel("mac")}</button>` +
+    `<button class="osbtn win" aria-pressed="${OS === "win"}" data-os="win">${osLabel("win")}</button>`;
+  box.querySelectorAll("button").forEach(b => b.onclick = () => { OS = b.dataset.os; renderOsToggle(); render(); });
+}
+
+function init() {
+  renderOsToggle();
+  const m = DATA.meta;
+  document.getElementById("meta").innerHTML =
+    `keymap ${m.keymap_sha256}（最終コミット ${m.commit}・${m.branch}）${m.dirty ? ' <span class="warn">（未コミットの変更あり）</span>' : ""}<br>生成 ${m.generated}`;
+  const tabs = document.getElementById("tabs");
+  DATA.layers.forEach((L, i) => {
+    const b = document.createElement("button");
+    b.className = "tab" + (isEmpty(i) ? " empty" : "");
+    b.innerHTML = `L${i} ${L.name}${isEmpty(i) ? "<small>空き</small>" : ""}`;
+    b.onclick = () => { current = i; render(); };
+    tabs.appendChild(b);
+  });
+  const legend = [["letter", "文字"], ["punct", "記号"], ["number", "数字"], ["nav", "移動"], ["edit", "編集・入力"], ["function", "Fキー"],
+                  ["mouse", "マウス"], ["media", "音量・輝度など"], ["mod", "修飾キー"], ["layer", "レイヤー切替"], ["system", "システム"]];
+  document.getElementById("legend").innerHTML = legend.map(([c, t]) =>
+    `<span><i class="sw" style="background:var(--${c});border-color:var(--${c}-b)"></i>${t}</span>`).join("") +
+    (DATA.combos.length ? `<span><i class="sw" style="background:#1d2430;border-color:#1d2430"></i>同時押し</span>` : "") +
+    `<span><i class="sw" style="background:#fff;border:3px solid #7b3fe4"></i>Windows 表示で Mac と違うキー</span>` +
+    `<span>点線のキー＝下のレイヤーから引き継ぎ</span><span>● と点線＝5方向スイッチの実機の位置</span><span>配置は製品写真から読み取った推定（±0.1キー程度）</span>`;
+  document.addEventListener("keydown", e => {
+    if (e.key === "ArrowRight") { current = (current + 1) % DATA.layers.length; render(); }
+    if (e.key === "ArrowLeft") { current = (current + DATA.layers.length - 1) % DATA.layers.length; render(); }
+  });
+  let lastW = 0;
+  new ResizeObserver(() => { const w = document.getElementById("board").parentElement.clientWidth; if (w !== lastW) { lastW = w; render(); } })
+    .observe(document.getElementById("board").parentElement);
+  render();
+}
+init();
+</script>
+</body>
+</html>
