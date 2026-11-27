@@ -154,24 +154,25 @@
         track-remainders;
     };
 
-    /* トラックパッドの速さ（REQ-195 追記5・6・7）: 右は通常（カーソル 1/2、スクロール 1/8、
-       低速モードは 1/6・1/24）。左は低速寄り（カーソル 1/8、スクロール 1/40、低速モードは 1/24・1/120）。
-       追記5で左右別にし、追記6で左右とも速くし、追記7（2026-11-27）で右だけさらに速くした。
-       左右は listener_R / listener_L の scaler の値で別々に変えられる */
+    /* トラックパッドの速さ（REQ-195 追記5〜8）: 右は通常（カーソル 3/4、スクロール 3/16、
+       低速モードは 1/4・1/16）。左は低速寄り（カーソル 3/16、スクロール 3/80、低速モードは 1/16・1/80）。
+       追記5で左右別にし、追記6で左右とも速くし、追記7で右だけさらに速くし、
+       追記8（2026-11-27）で左右とも約1.5倍にした。左右は listener_R / listener_L の
+       scaler の値で別々に変えられる */
     trackpad_listener_R: trackpad_listener_R {
         compatible = "zmk,input-listener";
         status = "disabled";
         device = <&trackpad_split_R>;
         input-processors = <&trackpad_key_behaviors_R>,
-                           <&zip_xy_scaler 1 2>,
-                           <&zip_scroll_scaler 1 8>,
+                           <&zip_xy_scaler 3 4>,
+                           <&zip_scroll_scaler 3 16>,
                            <&zip_dynamic_xy_scaler>,
                            <&zip_dynamic_scroll_scaler>;
         lowspeedmode {
             layers = <1>,<2>;
             input-processors =  <&trackpad_key_behaviors_R>,
-                                <&zip_xy_scaler 1 6>,
-                                <&zip_scroll_scaler 1 24>,
+                                <&zip_xy_scaler 1 4>,
+                                <&zip_scroll_scaler 1 16>,
                                 <&zip_dynamic_xy_scaler>,
                                 <&zip_dynamic_scroll_scaler>;
         };
@@ -181,15 +182,15 @@
         status = "disabled";
         device = <&trackpad_split_L>;
         input-processors = <&trackpad_key_behaviors_L>,
-                           <&zip_xy_scaler 1 8>,
-                           <&zip_scroll_scaler 1 40>,
+                           <&zip_xy_scaler 3 16>,
+                           <&zip_scroll_scaler 3 80>,
                            <&zip_dynamic_xy_scaler>,
                            <&zip_dynamic_scroll_scaler>;
         lowspeedmode {
             layers = <1>,<2>;
             input-processors =  <&trackpad_key_behaviors_L>,
-                                <&zip_xy_scaler 1 24>,
-                                <&zip_scroll_scaler 1 120>,
+                                <&zip_xy_scaler 1 16>,
+                                <&zip_scroll_scaler 1 80>,
                                 <&zip_dynamic_xy_scaler>,
                                 <&zip_dynamic_scroll_scaler>;
         };
